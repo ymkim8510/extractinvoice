@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거래명세서 추출기 (무료 OCR)</title>
+<style>
+  :root {
+    --bg:#f7f7f5; --sur:#fff; --bdr:#e2e2dc; --bdrs:#c8c8c0;
+    --txt:#1a1a18; --mut:#6b6b65; --hnt:#9f9f98;
+    --acc:#1a1a18; --afg:#fff;
+    --ok:#166534; --okb:#dcfce7;
+    --wn:#92400e; --wnb:#fef3c7;
+    --er:#991b1b;
+    --r:8px; --rl:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.6;min-height:100vh}
+  .hdr{background:var(--acc);color:var(--afg);padding:.9rem 1.5rem;display:flex;align-items:center;gap:12px}
+  .hdr h1{font-size:15px;font-weight:600}
+  .hdr p{font-size:11px;opacity:.55;margin-top:1px}
+  .badge-free{display:inline-block;background:#fef9c3;color:#713f12;border:1px solid #fde68a;border-radius:20px;font-size:11px;font-weight:700;padding:2px 8px;margin-left:8px}
+  .main{max-width:880px;margin:0 auto;padding:1.25rem 1rem 3rem}
+  .card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:1.2rem;margin-bottom:.9rem}
+  .ctitle{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem}
+  .ibox{border-radius:var(--r);padding:10px 14px;font-size:12px;line-height:1.8;margin-bottom:.75rem}
+  .ibox.green{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+  .ibox.yellow{background:var(--wnb);border:1px solid #fcd34d;color:#78350f}
+
+  /* Quality selector */
+  .q-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem}
+  .q-btn{padding:6px 14px;border:1px solid var(--bdrs);border-radius:20px;background:var(--bg);color:var(--mut);font-size:12px;cursor:pointer;transition:all .1s}
+  .q-btn.active{background:var(--acc);color:var(--afg);border-color:var(--acc)}
+  .q-hint{font-size:11px;color:var(--hnt);margin-top:4px}
+
+  /* Drop zone */
+  .dz{border:2px dashed var(--bdrs);border-radius:var(--r);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg)}
+  .dz:hover,.dz.drag{border-color:var(--acc);background:#eff6ff}
+  .dz svg{color:var(--hnt);margin-bottom:8px}
+  .dz-t{font-size:14px;color:var(--mut);margin-bottom:3px}
+  .dz-s{font-size:12px;color:var(--hnt)}
+  #fi{display:none}
+  .flist{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .fchip{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);font-size:13px}
+  .fn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fs{font-size:11px;color:var(--hnt);flex-shrink:0}
+  .frm{cursor:pointer;background:none;border:none;color:var(--hnt);font-size:18px;line-height:1}
+  .frm:hover{color:var(--er)}
+
+  /* Buttons */
+  .btn-run{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--acc);color:var(--afg);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;margin-top:.9rem;transition:opacity .15s}
+  .btn-run:disabled{opacity:.35;cursor:not-allowed}
+  .btn-dl{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:1px solid var(--bdrs);border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;background:var(--sur);color:var(--txt)}
+  .btn-dl:hover{background:var(--bg)}
+
+  /* Progress */
+  .prw{margin-top:10px;display:none}
+  .prb{height:4px;background:var(--bdr);border-radius:2px;overflow:hidden}
+  .prf{height:100%;background:var(--acc);border-radius:2px;transition:width .4s}
+  .prl{font-size:12px;color:var(--mut);margin-top:5px}
+
+  /* Log */
+  .log{background:#18181b;border-radius:var(--r);padding:10px 14px;font-size:12px;line-height:1.9;max-height:220px;overflow-y:auto;font-family:'Consolas',monospace;display:none;margin-top:.9rem}
+  .ll{color:#a1a1aa} .lk{color:#4ade80} .lw{color:#fbbf24} .le{color:#f87171} .li{color:#60a5fa}
+
+  /* Stats */
+  .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+  .st{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 12px}
+  .slb{font-size:11px;color:var(--mut);margin-bottom:3px}
+  .sv{font-size:22px;font-weight:600}
+  .sv.wn{color:var(--wn)} .sv.ok{color:var(--ok)}
+
+  /* Table */
+  .tscr{overflow-x:auto;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:1rem}
+  table{width:100%;border-collapse:collapse;min-width:920px}
+  th{background:var(--bg);padding:7px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--mut);white-space:nowrap;border-bottom:1px solid var(--bdr);text-transform:uppercase;letter-spacing:.04em}
+  td{padding:6px 10px;border-bottom:1px solid var(--bg);font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tr.rv{background:#fffbeb}
+  tr:hover td{background:var(--bg)}
+  .bdg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+  .by{background:var(--wnb);color:var(--wn)}
+  .bn{background:var(--okb);color:var(--ok)}
+  .rs{display:none}
+  .sl{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:1.2rem 0 .5rem}
+  .pc{font-size:11px;color:var(--hnt);font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
+
+  /* Debug */
+  .dbg-t{font-size:11px;color:var(--hnt);cursor:pointer;background:none;border:none;margin-top:6px;text-decoration:underline;display:none}
+  .dbg-p{margin-top:6px;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;font-size:11px;color:var(--mut);max-height:200px;overflow-y:auto;display:none;font-family:monospace;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>📋 거래명세서 자동 추출기 <span class="badge-free">완전 무료</span></h1>
+    <p>Tesseract.js OCR · API Key 불필요 · 브라우저에서 모두 처리 · 데이터 외부 전송 없음</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- OCR 설정 -->
+  <div class="card">
+    <div class="ctitle">OCR 품질 설정</div>
+    <div class="ibox green">
+      ✅ <strong>완전 무료</strong> — Tesseract.js가 브라우저 안에서 직접 OCR 처리합니다.<br>
+      📥 처음 실행 시 한국어 OCR 데이터(약 10 MB)를 자동 다운로드합니다.<br>
+      🔒 PDF 파일은 브라우저 밖으로 전송되지 않습니다.
+    </div>
+    <div class="ibox yellow">
+      ⚠️ 스캔 품질에 따라 인식률이 달라질 수 있습니다.<br>
+      인식이 애매한 행은 Review Flag = Y 로 표시되니 Excel에서 확인 후 수정하세요.
+    </div>
+    <p style="font-size:12px;color:var(--mut);margin-bottom:8px">렌더링 해상도 (높을수록 정확하지만 느림)</p>
+    <div class="q-row">
+      <button class="q-btn" data-scale="1.5" onclick="setScale(this)">빠름 (1.5×)</button>
+      <button class="q-btn active" data-scale="2.0" onclick="setScale(this)">보통 (2×) ← 권장</button>
+      <button class="q-btn" data-scale="3.0" onclick="setScale(this)">정밀 (3×)</button>
+    </div>
+    <p class="q-hint" id="q-hint">페이지당 약 5~15초 소요</p>
+  </div>
+
+  <!-- 업로드 -->
+  <div class="card">
+    <div class="ctitle">PDF 파일 선택</div>
+    <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+      <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p class="dz-t">PDF 파일을 드래그하거나 클릭해 선택하세요</p>
+      <p class="dz-s">스캔 PDF · 이미지 PDF · 텍스트 PDF 모두 지원 · 여러 파일 동시 선택</p>
+    </div>
+    <input type="file" id="fi" accept=".pdf" multiple>
+    <div class="flist" id="flist"></div>
+    <button class="btn-run" id="run-btn" disabled onclick="run()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      OCR 추출 시작
+    </button>
+    <div class="prw" id="prw">
+      <div class="prb"><div class="prf" id="prf" style="width:0%"></div></div>
+      <div class="prl" id="prl"></div>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+  <button class="dbg-t" id="dbg-t" onclick="toggleDebug()">OCR 원문 텍스트 보기 (디버그)</button>
+  <div class="dbg-p" id="dbg-p"></div>
+
+  <!-- 결과 -->
+  <div class="rs" id="rs">
+    <div class="card">
+      <div class="ctitle">결과 요약</div>
+      <div class="sg" id="sg"></div>
+      <div class="sl">미리보기 <span class="pc" id="pc"></span></div>
+      <div class="tscr" id="tscr"></div>
+      <button class="btn-dl" onclick="dlXlsx()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Excel 다운로드 (.xlsx)
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+'use strict';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const COLS = [
+  'Dealer Name','Dealer TAX ID','End User Name','End User TAX ID',
+  'Document No','Date','Material Desc','Material Code','Unit','Qty',
+  'EDI Code','Insurance Code','Source File','Review Flag','Review Reason'
+];
+const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC']);
+const INS_RE = /^(비보험|[BM]\d{6,})$/;
+const EDI_RE = /^\d{2}[A-Z0-9]{4,}$/;
+
+let files = [], rows = [], dbgLines = [];
+let renderScale = 2.0;
+let ocrWorker = null;
+
+// ── Quality selector ─────────────────────────────────────────
+function setScale(btn) {
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderScale = parseFloat(btn.dataset.scale);
+  const h = {1.5:'페이지당 약 3~8초 소요', 2.0:'페이지당 약 5~15초 소요', 3.0:'페이지당 약 15~40초 소요'};
+  document.getElementById('q-hint').textContent = h[renderScale] || '';
+}
+
+// ── File UI ──────────────────────────────────────────────────
+const dz = document.getElementById('dz');
+const fi = document.getElementById('fi');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf')); });
+fi.addEventListener('change', () => addFiles([...fi.files]));
+
+function addFiles(arr) {
+  arr.forEach(f => { if (!files.find(x=>x.name===f.name&&x.size===f.size)) files.push(f); });
+  renderFiles();
+}
+function removeFile(i) { files.splice(i,1); renderFiles(); }
+function renderFiles() {
+  const el = document.getElementById('flist');
+  el.innerHTML = '';
+  files.forEach((f,i) => {
+    const c = document.createElement('div'); c.className='fchip';
+    c.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="fn">${f.name}</span><span class="fs">${(f.size/1024/1024).toFixed(1)} MB</span><button class="frm" onclick="removeFile(${i})">×</button>`;
+    el.appendChild(c);
+  });
+  document.getElementById('run-btn').disabled = files.length === 0;
+}
+
+// ── Log / Progress ───────────────────────────────────────────
+function log(msg, cls='') {
+  const lb = document.getElementById('log');
+  lb.style.display = 'block';
+  const d = document.createElement('div');
+  d.className = 'll'+(cls?' l'+cls:'');
+  d.textContent = msg;
+  lb.appendChild(d); lb.scrollTop = lb.scrollHeight;
+}
+function prog(pct, label='') {
+  document.getElementById('prw').style.display = 'block';
+  if (pct != null) document.getElementById('prf').style.width = pct+'%';
+  if (label) document.getElementById('prl').textContent = label;
+}
+function toggleDebug() {
+  const p = document.getElementById('dbg-p');
+  p.style.display = p.style.display === 'none' || !p.style.display ? 'block' : 'none';
+}
+
+// ── Tesseract worker (싱글턴) ─────────────────────────────────
+async function getWorker() {
+  if (!ocrWorker) {
+    log('한국어 OCR 모듈 초기화 중... (처음 실행 시 약 10 MB 다운로드)', 'i');
+    ocrWorker = await Tesseract.createWorker('kor+eng', 1, {
+      logger: m => {
+        if (m.status === 'recognizing text')
+          prog(null, `OCR 인식 중... ${Math.round(m.progress*100)}%`);
+      }
+    });
+    await ocrWorker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      preserve_interword_spaces: '1',
+    });
+    log('OCR 모듈 준비 완료', 'k');
+  }
+  return ocrWorker;
+}
+
+// ── PDF page → canvas ────────────────────────────────────────
+async function renderPage(pdf, n) {
+  const page = await pdf.getPage(n);
+  const vp   = page.getViewport({scale: renderScale});
+  const cv   = document.createElement('canvas');
+  cv.width = vp.width; cv.height = vp.height;
+  const ctx  = cv.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  await page.render({canvasContext: ctx, viewport: vp}).promise;
+  return cv;
+}
+
+// ── OCR one page ─────────────────────────────────────────────
+async function ocrPage(canvas) {
+  const w = await getWorker();
+  const { data } = await w.recognize(canvas);
+  return data.text || '';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PARSING
+// ══════════════════════════════════════════════════════════════
+const digitsOnly = s => (s||'').replace(/\D/g,'');
+const normSp     = s => (s||'').replace(/\s+/g,' ').trim();
+const isUnit     = t => VALID_UNITS.has(t.trim().toUpperCase());
+const isIns      = t => INS_RE.test(t.trim());
+const isEdi      = t => EDI_RE.test(t.trim());
+
+function extractBizIds(line) {
+  const ids = [];
+  const ms = line.match(/\d[\d\s\-—]{8,}\d/g) || [];
+  for (const m of ms) {
+    const d = digitsOnly(m);
+    if (d.length >= 10) ids.push(d.slice(0,10));
+  }
+  return ids;
+}
+
+function extractHeader(lines, filename) {
+  let dTax='', eTax='', dName='', eName='', docNo='', date='';
+
+  for (const line of lines) {
+    if (line.includes('등록번호') || line.match(/\d{3}[\s\-]\d{2}[\s\-]\d{5}/)) {
+      const ids = extractBizIds(line);
+      if (ids[0] && !dTax) dTax = ids[0];
+      if (ids[1] && !eTax) eTax = ids[1];
+    }
+    if ((line.includes('상호')||line.includes('상 호')||line.includes('상  호')) && line.includes('성명')) {
+      const rx = /상\s*호\s*(.*?)\s*성명/g;
+      let m; const found=[];
+      while ((m=rx.exec(line))!==null) found.push(normSp(m[1]));
+      if (found[0] && !dName) dName = found[0];
+      if (found[1] && !eName) eName = found[1];
+    }
+    if (!date) {
+      const dm = line.match(/(\d{1,2})월\s*(\d{1,2})일/);
+      if (dm) {
+        const fn = filename.match(/(20\d{2})\d{4}/);
+        if (fn) date = `${fn[1]}-${dm[1].padStart(2,'0')}-${dm[2].padStart(2,'0')}`;
+      }
+    }
+    if (!docNo) {
+      const dn = line.match(/^(\d{5,6})\s*[-—]\s*(\d)/);
+      if (dn) docNo = `${dn[1]}-${dn[2]}`;
+    }
+  }
+  return {'Dealer Name':dName,'Dealer TAX ID':dTax,'End User Name':eName,'End User TAX ID':eTax,'Document No':docNo,'Date':date};
+}
+
+function parseItems(lines) {
+  const grouped = {};
+  let cur = null, inTable = false;
+
+  for (const raw of lines) {
+    const s = raw.trim();
+    const compact = s.replace(/\s+/g,'');
+
+    if (compact.includes('번호') && compact.includes('물품명')) { inTable=true; cur=null; continue; }
+    if (!inTable) continue;
+    if (['검수','합계금액','공급가액','세액'].some(k=>compact.includes(k))) { inTable=false; cur=null; continue; }
+
+    const rm = s.match(/^(\d{1,2})\s+(.*)/);
+    if (rm) {
+      const n = parseInt(rm[1],10);
+      if (n >= 1 && n <= 50) {
+        cur = n;
+        if (!grouped[cur]) grouped[cur] = [];
+        grouped[cur].push(s);
+        continue;
+      }
+    }
+    if (cur !== null) grouped[cur].push(s);
+  }
+
+  const items = [];
+  for (const rn of Object.keys(grouped).map(Number).sort((a,b)=>a-b)) {
+    const it = parseGroup(grouped[rn]);
+    if (it) items.push(it);
+  }
+  return items;
+}
+
+function parseGroup(lines) {
+  const rm = lines[0].match(/^(\d{1,2})\s+(.*)/);
+  if (!rm) return null;
+  const payload = normSp(rm[2]);
+  if (!payload) return null;
+
+  const toks = payload.split(/\s+/);
+  let ins='', rest=payload;
+  if (toks.length && isIns(toks[0])) { ins = toks[0]; rest = toks.slice(1).join(' '); }
+
+  let desc=rest, code='', unit='', qty='', edi='';
+
+  const m1 = rest.match(/^(.+?)\s+([A-Za-z0-9\-]+)\s+(EA|BOX|SET|PK|PAC)\s+(\d+)$/i);
+  if (m1) { desc=m1[1]; code=m1[2]; unit=m1[3].toUpperCase(); qty=m1[4]; }
+
+  for (let i=1; i<lines.length; i++) {
+    const extra = normSp(lines[i]);
+    if (!extra) continue;
+    if (isEdi(extra) && !edi) { edi = extra; continue; }
+
+    const ts = extra.split(/\s+/);
+    const last = ts[ts.length-1];
+    const prev = ts[ts.length-2] || '';
+
+    if (ts.length >= 2 && /^\d+$/.test(last) && isUnit(prev)) {
+      if (!unit) unit = prev.toUpperCase();
+      if (!qty)  qty  = last;
+      if (!code && ts.length >= 3) code = ts[ts.length-3];
+      continue;
+    }
+    if (!code && /^[A-Z][A-Z0-9\-]{3,11}$/.test(extra.trim())) { code = extra.trim(); continue; }
+  }
+
+  if (!unit || !qty) {
+    const fb = rest.match(/(EA|BOX|SET|PK|PAC)\s+(\d+)$/i);
+    if (fb) { unit = fb[1].toUpperCase(); qty = fb[2]; }
+  }
+
+  const descClean = normSp(desc.replace(/(EA|BOX|SET|PK|PAC)\s+\d+$/i,'').replace(/[A-Z][A-Z0-9\-]{4,}\s*$/,''));
+
+  return {
+    'Material Desc': descClean || desc,
+    'Material Code': code,
+    'Unit': unit,
+    'Qty': qty==='' ? '' : parseInt(qty,10),
+    'EDI Code': edi,
+    'Insurance Code': ins,
+  };
+}
+
+function review(row) {
+  const r = [];
+  if (!row['Date'])          r.push('Date missing');
+  if (!row['Material Code']) r.push('Material Code missing');
+  if (!row['Unit']||!VALID_UNITS.has(row['Unit'])) r.push('Unit missing/invalid');
+  if (row['Qty']==='')       r.push('Qty missing');
+  if (!row['Insurance Code'])r.push('Insurance Code missing');
+  return {...row, 'Review Flag': r.length?'Y':'N', 'Review Reason': r.join('; ')};
+}
+
+// ── Main ─────────────────────────────────────────────────────
+async function run() {
+  if (!files.length) return;
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('rs').style.display = 'none';
+  document.getElementById('dbg-p').textContent = '';
+  document.getElementById('dbg-t').style.display = 'none';
+  rows = []; dbgLines = [];
+
+  const pdfs = [];
+  let total = 0;
+  for (const f of files) {
+    const ab  = await f.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+    pdfs.push({f, pdf, n: pdf.numPages});
+    total += pdf.numPages;
+  }
+  log(`총 ${files.length}개 파일, ${total}페이지`, 'i');
+  prog(0, '초기화 중...');
+  let done = 0;
+
+  for (const {f, pdf, n} of pdfs) {
+    log(`\n📄 ${f.name} (${n}페이지)`, 'i');
+    for (let p=1; p<=n; p++) {
+      prog(Math.round(done/total*95), `${f.name} — ${p}/${n}페이지`);
+      try {
+        const cv    = await renderPage(pdf, p);
+        const text  = await ocrPage(cv);
+        const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+
+        dbgLines.push(`\n${'='.repeat(50)}\n${f.name} — p${p}\n${'='.repeat(50)}`);
+        dbgLines.push(...lines);
+
+        const header = extractHeader(lines, f.name);
+        const items  = parseItems(lines);
+        log(`  ✓ p${p}  Doc ${header['Document No']||'?'}  날짜 ${header['Date']||'?'}  품목 ${items.length}개`, items.length>0?'k':'w');
+
+        for (const it of items) rows.push(review({...header, ...it, 'Source File': f.name}));
+      } catch(err) {
+        log(`  ✗ p${p} 오류: ${err.message}`, 'e');
+      }
+      done++;
+    }
+  }
+
+  prog(100, '완료!');
+  const rv = rows.filter(r=>r['Review Flag']==='Y').length;
+  log(`\n✅ 총 ${rows.length}개 품목 추출 완료`, 'k');
+  if (rv) log(`⚠️  Review Flag Y: ${rv}개 확인 필요`, 'w');
+
+  document.getElementById('dbg-t').style.display = 'inline';
+  document.getElementById('dbg-p').textContent = dbgLines.join('\n');
+  renderResult();
+  document.getElementById('run-btn').disabled = false;
+}
+
+// ── Render ───────────────────────────────────────────────────
+function renderResult() {
+  const srcs = [...new Set(rows.map(r=>r['Source File']))];
+  const rv   = rows.filter(r=>r['Review Flag']==='Y').length;
+  document.getElementById('sg').innerHTML = `
+    <div class="st"><div class="slb">처리한 PDF</div><div class="sv">${srcs.length}</div></div>
+    <div class="st"><div class="slb">총 품목 수</div><div class="sv">${rows.length}</div></div>
+    <div class="st"><div class="slb">확인 필요</div><div class="sv ${rv>0?'wn':'ok'}">${rv}</div></div>
+  `;
+  const C = ['Document No','Date','Dealer Name','End User Name','Material Desc','Material Code','Insurance Code','Unit','Qty','EDI Code','Review Flag'];
+  const pv = rows.slice(0,300);
+  document.getElementById('pc').textContent = rows.length>300?`(최대 300행 / 전체 ${rows.length}행)`:`(전체 ${rows.length}행)`;
+
+  let h = '<table><thead><tr>'+C.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  for (const r of pv) {
+    h += `<tr${r['Review Flag']==='Y'?' class="rv"':''}>`;
+    for (const c of C) {
+      const v = r[c]==null?'':String(r[c]);
+      h += c==='Review Flag' ? `<td><span class="bdg ${v==='Y'?'by':'bn'}">${v}</span></td>` : `<td title="${v.replace(/"/g,'&quot;')}">${v}</td>`;
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table>';
+  document.getElementById('tscr').innerHTML = h;
+  document.getElementById('rs').style.display = 'block';
+}
+
+// ── Excel ────────────────────────────────────────────────────
+function dlXlsx() {
+  if (!rows.length) return;
+  const wb = XLSX.utils.book_new();
+  const ms = data => XLSX.utils.json_to_sheet(data.map(r=>{const o={};for(const c of COLS)o[c]=r[c]??'';return o;}),{header:COLS});
+  XLSX.utils.book_append_sheet(wb, ms(rows), '전체');
+  const eus = [...new Set(rows.map(r=>r['End User Name']||'미분류'))];
+  const used = new Set(['전체']);
+  for (const eu of eus) {
+    let sn=(eu||'미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31)||'미분류';
+    let b=sn,c=2; while(used.has(sn)){sn=b.slice(0,28)+'_'+c;c++;} used.add(sn);
+    XLSX.utils.book_append_sheet(wb, ms(rows.filter(r=>(r['End User Name']||'미분류')===eu)), sn);
+  }
+  XLSX.writeFile(wb, '거래명세서_추출결과.xlsx');
+}
+</script>
+</body>
+</html>
