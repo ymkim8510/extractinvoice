@@ -1,467 +1,952 @@
-mport os
-
-import glob
-
-import pandas as pd
-
-import pdfplumber
-
-import re
-
-import calendar
-
-from datetime import datetime
-
-from openpyxl import load_workbook
-
-import win32com.client as win32
-
- 
-
-# Part 1. 준비하기
-
-# 분기를 입력합니다.
-
-Q = 1  # 분기번호 (1, 2, 3, 4)
-
- 
-
-# 분기 데이터
-
-Quarter = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
-
-# months = Quarter[Q]
-
-years = 2026
-
-months = [1, 2]
-
- 
-
-# 전체 데이터 저장 리스트
-
-all_data = []
-
- 
-
-# 전체 시작 시간 기록
-
-print(f"\n안녕하세요 😊 {years}년 {months}월 거래명세서를 준비합니다.")
-
-total_start_time = datetime.now()
-
- 
-
-print(f"\n--- [시작: {total_start_time.strftime('%Y-%m-%d %H:%M:%S')}]")
-
- 
-
-# Part 2-1. 신원 거래명세서 읽기
-
-print("\n1. '신원약품' 거래데이터를 확인하겠습니다")
-
- 
-
-for month in months:
-
-    all_monthly_data_SW = []
-
-    start_time = datetime.now()
-
-    print(f"--- {calendar.month_name[month]} 처리 시작: {start_time.strftime('%Y-%m-%d %H:%M:%S')} ---")
-
-   
-
-    folder_path = fr"C:\Users\EPark18\OneDrive - JNJ\Mentor_IMS - 문서\신원약품\{years}\{month}월"
-
-   
-
-    # 폴더 존재 여부 체크
-
-    if not os.path.exists(folder_path):
-
-        print(f"{month}월 폴더가 존재하지 않습니다. 데이터를 처리하지 않습니다.")
-
-        continue
-
-   
-
-    # PDF 파일 리스트
-
-    pdf_files = glob.glob(os.path.join(folder_path, "*.pdf"))
-
-   
-
-    # 폴더는 있는데 파일이 없으면
-
-    if len(pdf_files) == 0:
-
-        print(f"{month}월 폴더에는 PDF 파일이 없습니다. 데이터를 처리하지 않습니다.")
-
-        continue
-
- 
-
-    for pdf_path in pdf_files:
-
-        with pdfplumber.open(pdf_path) as pdf:
-
-           
-
- 
-
-            for page in pdf.pages:
-
-                df = page.extract_tables()
-
- 
-
-                # 납품처 정보 추출
-
-                account_info_name = df[0][2][-1].replace(" ", "")
-
-                account_info_taxid = df[0][1][5].replace("-", "").replace(" ", "")
-
- 
-
-                account_info_df = pd.DataFrame({
-
-                    'End User Tax ID': [account_info_taxid],
-
-                    'End User Name': [account_info_name]
-
-                })
-
- 
-
-                # 판매 정보 데이터프레임 생성
-
-                product_info = df[1]
-
-                product_info_df = pd.DataFrame(product_info[2:], columns=product_info[0])
-
- 
-
-                # 마지막 4행 삭제
-
-                product_info_df = product_info_df.iloc[:-4]
-
- 
-
-                # 열 처리 (Company Code, Serial Number)
-
-                product_info_df['제 약 회 사'] = product_info_df['제 약 회 사'].str.split('\n').str[-1]
-
- 
-
-                # 필요 열 선택
-
-                columns_to_keep = [1, 3, -1, 9]
-
-                product_info_df = product_info_df.iloc[:, columns_to_keep]
-
- 
-
-                # 새 열 이름 지정
-
-                new_column_names = ['Company Code', 'Product Desc', 'Serial Number', 'Qty']
-
-                product_info_df.columns = new_column_names
-
-                product_info_df['Serial Number'] = product_info_df['Serial Number'].str.split('\n').str[0]
-
- 
-
-                # Company Code가 NULL인 경우 제거
-
-                product_info_df = product_info_df[
-
-                    product_info_df['Company Code'].notna() &
-
-                    (product_info_df['Company Code'].astype(str).str.len() > 0) &
-
-                    (product_info_df['Company Code'] != '담 당')
-
-                ]          
-
- 
-
-                # 병원 정보와 판매 정보 결합
-
-                receipt_df = pd.merge(account_info_df, product_info_df, how="cross")
-
-               
-
-                # 개별 페이지 결과 리스트에 저장
-
-                all_monthly_data_SW.append(receipt_df)            
-
- 
-
-               
-
- 
-
-    # 월 PDF 파일 모두 병합 (별개의 파일이 있는 경우 고려)
-
-    month_df = pd.concat(all_monthly_data_SW, ignore_index=True)
-
-    month_df['Dealer Name'] = "(주)신원약품"
-
-    month_df['Month'] = calendar.month_abbr[month]
-
-    columns_order = ['Month', 'Dealer Name', 'End User Tax ID', 'End User Name', 'Company Code', 'Product Desc', 'Serial Number', 'Qty' ]
-
-    month_df = month_df[columns_order]
-
- 
-
-    # 월 데이터들을 리스트에 저장
-
-    all_data.append(month_df)
-
- 
-
-    end_time = datetime.now()
-
-    elapsed = end_time - start_time
-
-    print(f"--- {calendar.month_name[month]} 처리 완료: {end_time.strftime('%Y-%m-%d %H:%M:%S')} (경과 시간: {str(elapsed)}) ---")
-
- 
-
-# Part 2-2. MS 거래명세서 읽기
-
-print("\n2. '엠에스메디칼' 거래데이터를 확인하겠습니다")
-
- 
-
-for month in months:
-
-    all_monthly_data_MS = []
-
-    start_time = datetime.now()
-
-    print(f"--- {calendar.month_name[month]} 처리 시작: {start_time.strftime('%Y-%m-%d %H:%M:%S')} ---")
-
-   
-
-    if month < 10:
-
-        folder_path = fr"C:\Users\EPark18\OneDrive - JNJ\Mentor_IMS - 문서\엠에스메디칼\{years}\0{month}"
-
-    else:
-
-        folder_path = fr"C:\Users\EPark18\OneDrive - JNJ\Mentor_IMS - 문서\엠에스메디칼\{years}\{month}"
-
-   
-
-   
-
-    # 폴더 존재 여부 체크
-
-    if not os.path.exists(folder_path):
-
-        print(f"{month}월 폴더가 존재하지 않습니다. 데이터를 처리하지 않습니다.")
-
-        continue
-
-   
-
-    # PDF 파일 리스트
-
-    pdf_files = glob.glob(os.path.join(folder_path, "*.pdf"))
-
-   
-
-    # 폴더는 있는데 파일이 없으면
-
-    if len(pdf_files) == 0:
-
-        print(f"{month}월 폴더에는 PDF 파일이 없습니다. 데이터를 처리하지 않습니다.")
-
-        continue
-
-   
-
-    for pdf_path in pdf_files:
-
-        with pdfplumber.open(pdf_path) as pdf:
-
-            # 납품처 정보 추출
-
-            df = pdf.pages[0].extract_tables()[0]
-
-            df = [
-
-                [item for item in row if item is not None]
-
-                for row in df
-
-            ]
-
-            account_taxid = df[0][-1].replace('\n', "").replace("-", "").replace(" ", "")
-
-            try:
-
-                account_name = pdf_path.split("_")[2].strip().replace(" ","")
-
-            except IndexError:
-
-                account_name = "Unknown"
-
-            account_info_df = pd.DataFrame({
-
-                'End User Tax ID': [account_taxid],
-
-                'End User Name': [account_name]
-
-            })
-
- 
-
-            # 판매 정보 가공
-
-            product_info = []
-
- 
-
-            for page in pdf.pages:
-
-                df = page.extract_tables()[0]
-
-                df = [
-
-                    [item for item in row if item is not None]
-
-                    for row in df
-
-                ]
-
-                for index, row in enumerate(df[7:-2]):
-
-                    if row[0] == "" or row[3] == "":
-
-                        continue
-
-                    product_name_value = row[3].replace('\n', '')
-
-                    product_name_value = re.sub(r'\(.*', '', product_name_value).strip().upper()
-
-                    product_info.append([row[4].replace('\n', ""), product_name_value, row[5].replace('\n', "")])
-
-           
-
-            # 병원 정보와 판매 정보 결합
-
-            product_info_df = pd.DataFrame(product_info, columns=['Product Code', 'Product Desc', 'Qty'])
-
-            receipt_df = pd.merge(account_info_df, product_info_df, how="cross")
-
-            all_monthly_data_MS.append(receipt_df)
-
-           
-
- 
-
-     # 월 데이터 병합
-
-    month_df = pd.concat(all_monthly_data_MS, ignore_index=True)
-
-    month_df['Dealer Name'] = "(주)엠에스메디칼"
-
-    month_df['Month'] = calendar.month_abbr[month]
-
-    columns_order = ['Month', 'Dealer Name', 'End User Tax ID', 'End User Name', 'Product Code', 'Product Desc', 'Qty']
-
-    month_df = month_df[columns_order]
-
- 
-
-    # 월 데이터 추가
-
-    all_data.append(month_df)
-
- 
-
-    end_time = datetime.now()
-
-    elapsed = end_time - start_time
-
-    print(f"--- {calendar.month_name[month]} 처리 완료: {end_time.strftime('%Y-%m-%d %H:%M:%S')} (경과 시간: {str(elapsed)}) ---")
-
- 
-
-# 전체 종료 시간 기록
-
-total_end_time = datetime.now()
-
-total_elapsed = total_end_time - total_start_time
-
- 
-
-# 최종 병합 후 저장
-
-if all_data:
-
-    final_df = pd.concat(all_data, ignore_index=True)
-
- 
-
-    # 데이터 타입 정리
-
-    final_df['Qty'] = pd.to_numeric(final_df['Qty'], errors='coerce')
-
-    final_df['Qty'] = final_df['Qty'].fillna(0).replace(",", "").astype(int)
-
-    final_df['Year'] = years
-
-   
-
-    # columns_order = ['Year', 'Month', 'Dealer Name', 'End User Tax ID', 'End User Name','Company code', 'Product Code','Product Desc', 'Qty']
-
-    # final_df = final_df[columns_order]
-
-   
-
-    #데이터 저장
-
-    # wb.save(filepath)
-
-    final_df.to_excel(fr"C:\Users\EPark18\OneDrive - JNJ\Data Hub\02_BU_CSS_Mentor\07_Validation\01_Receipt\Mentor_거래명세서_{years}_{month}.xlsx", sheet_name=f"Invoice Raw", index=False)
-
-   
-
-    total_end_time = datetime.now()
-
-    print(f"[종료: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
-
-    print("전체 데이터를 병합하여 저장 완료!")
-
- 
-
-else:
-
-    total_end_time = datetime.now()
-
-    print()
-
-    print(f"\n[종료: {total_end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
-
-    print("처리된 데이터가 없습니다.")
-
- 
-
-# 결과 안내
-
-total_elapsed = total_end_time - total_start_time
-
-print(f"전체 처리 시간: {str(total_elapsed)}")
-
-print("---")
-
-print(final_df.info())
-
-print("---")
-
-print(final_df.describe())
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거래명세서 추출기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #ffffff;
+    --bg-soft:   #f7f7f8;
+    --bg-sunken: #f4f4f5;
+    --border:    #e5e5e5;
+    --border-2:  #d9d9e3;
+    --text:      #0d0d0d;
+    --text-2:    #5d5d5d;
+    --text-3:    #8e8ea0;
+    --accent:    #10a37f;
+    --accent-h:  #0d8a6c;
+    --accent-bg: #e7f6f1;
+    --warn:      #b45309;
+    --warn-bg:   #fef7ec;
+    --err:       #dc2626;
+    --err-bg:    #fef2f2;
+    --radius:    12px;
+    --radius-lg: 16px;
+    --radius-sm: 8px;
+    --shadow:    0 1px 2px rgba(0,0,0,.03), 0 4px 12px rgba(0,0,0,.04);
+    --font: 'Inter','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono: 'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--text);
+    font-size:15px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  /* ── Top bar ─────────────────────────────── */
+  .topbar{
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+    height:56px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:sticky;
+    top:0;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(8px);
+    z-index:10;
+  }
+  .logo{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--accent);
+    display:grid;place-items:center;
+    color:#fff;font-size:13px;font-weight:700;
+    flex-shrink:0;
+  }
+  .topbar-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .topbar-badge{
+    margin-left:auto;
+    font-size:12px;
+    color:var(--text-3);
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:3px 11px;
+    font-weight:500;
+  }
+
+  /* ── Layout ──────────────────────────────── */
+  .wrap{max-width:820px;margin:0 auto;padding:44px 24px 100px}
+
+  .hero{text-align:center;margin-bottom:40px}
+  .hero h1{
+    font-size:32px;
+    font-weight:600;
+    letter-spacing:-.025em;
+    line-height:1.25;
+    margin-bottom:10px;
+  }
+  .hero p{
+    font-size:15px;
+    color:var(--text-2);
+    max-width:44ch;
+    margin:0 auto;
+  }
+
+  /* ── Card ────────────────────────────────── */
+  .card{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:24px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  .card-h{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:16px;
+  }
+  .card-h h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .card-h .n{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--bg-sunken);
+    color:var(--text-2);
+    font-size:11px;font-weight:600;
+    display:grid;place-items:center;
+    flex-shrink:0;
+  }
+  .card-h .meta{
+    margin-left:auto;
+    font-size:13px;
+    color:var(--text-3);
+  }
+
+  /* ── Callout ─────────────────────────────── */
+  .callout{
+    display:flex;gap:10px;
+    background:var(--bg-soft);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    font-size:13.5px;
+    color:var(--text-2);
+    line-height:1.6;
+    margin-bottom:16px;
+  }
+  .callout .ico{flex-shrink:0;font-size:15px;line-height:1.4}
+  .callout strong{color:var(--text);font-weight:600}
+  .callout code{
+    font-family:var(--mono);font-size:12.5px;
+    background:var(--bg-sunken);
+    padding:1px 5px;border-radius:4px;
+  }
+  .callout.warn{background:var(--warn-bg);color:#7c4a10}
+  .callout.warn strong{color:#5c360b}
+
+  /* ── Dropzone ────────────────────────────── */
+  .drop{
+    border:1.5px dashed var(--border-2);
+    border-radius:var(--radius);
+    background:var(--bg-soft);
+    padding:40px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:all .16s ease;
+  }
+  .drop:hover,.drop.over{
+    border-color:var(--accent);
+    background:var(--accent-bg);
+  }
+  .drop-ico{
+    width:44px;height:44px;
+    margin:0 auto 12px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    display:grid;place-items:center;
+    color:var(--text-3);
+    transition:all .16s ease;
+  }
+  .drop:hover .drop-ico,.drop.over .drop-ico{
+    color:var(--accent);border-color:var(--accent);
+  }
+  .drop-t{font-size:14.5px;font-weight:500;margin-bottom:3px}
+  .drop-s{font-size:13px;color:var(--text-3)}
+  #fi{display:none}
+
+  /* ── File list ───────────────────────────── */
+  .files{display:none;flex-direction:column;gap:8px;margin-top:14px}
+  .files.on{display:flex}
+  .file{
+    display:flex;align-items:center;gap:11px;
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:9px 12px;
+  }
+  .file-ico{
+    width:28px;height:28px;flex-shrink:0;
+    border-radius:6px;
+    background:var(--err-bg);
+    color:var(--err);
+    display:grid;place-items:center;
+    font-size:9px;font-weight:700;
+    letter-spacing:.02em;
+  }
+  .file-name{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-size{font-size:12px;color:var(--text-3);flex-shrink:0;font-family:var(--mono)}
+  .file-x{
+    background:none;border:none;cursor:pointer;
+    color:var(--text-3);font-size:16px;line-height:1;
+    padding:2px 4px;border-radius:4px;flex-shrink:0;
+  }
+  .file-x:hover{color:var(--err);background:var(--err-bg)}
+
+  /* ── Buttons ─────────────────────────────── */
+  .btn{
+    font-family:var(--font);
+    font-size:14px;font-weight:500;
+    padding:10px 18px;
+    border-radius:var(--radius-sm);
+    border:1px solid transparent;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:all .14s ease;
+  }
+  .btn-p{background:var(--accent);color:#fff}
+  .btn-p:hover:not(:disabled){background:var(--accent-h)}
+  .btn-p:disabled{background:var(--bg-sunken);color:var(--text-3);cursor:not-allowed}
+  .btn-s{background:var(--bg);color:var(--text);border-color:var(--border-2)}
+  .btn-s:hover{background:var(--bg-soft)}
+  .btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+
+  /* ── Progress ────────────────────────────── */
+  .prog{display:none;margin-top:16px}
+  .prog.on{display:block}
+  .prog-bar{
+    height:6px;background:var(--bg-sunken);
+    border-radius:99px;overflow:hidden;
+  }
+  .prog-fill{
+    height:100%;background:var(--accent);
+    border-radius:99px;width:0%;
+    transition:width .35s cubic-bezier(.4,0,.2,1);
+  }
+  .prog-lbl{
+    font-size:13px;color:var(--text-2);
+    margin-top:8px;display:flex;justify-content:space-between;
+  }
+  .prog-pct{font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
+
+  /* ── Console ─────────────────────────────── */
+  .console{
+    display:none;
+    margin-top:16px;
+    background:var(--bg-sunken);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.9;
+    max-height:240px;overflow-y:auto;
+    color:var(--text-2);
+  }
+  .console.on{display:block}
+  .c-line{white-space:pre-wrap}
+  .c-hd  {color:var(--text);font-weight:500}
+  .c-ok  {color:var(--accent)}
+  .c-warn{color:var(--warn)}
+  .c-err {color:var(--err)}
+
+  /* ── Stats ───────────────────────────────── */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .stat{
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-l{font-size:12.5px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+  .stat-v{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1}
+  .stat-v .u{font-size:14px;color:var(--text-3);font-weight:400;margin-left:3px}
+  .stat.ok   .stat-v{color:var(--accent)}
+  .stat.warn .stat-v{color:var(--warn)}
+
+  /* ── Table ───────────────────────────────── */
+  .tbl-wrap{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:980px}
+  thead th{
+    background:var(--bg-soft);
+    font-size:12px;font-weight:600;
+    color:var(--text-2);
+    text-align:left;
+    padding:10px 13px;
+    white-space:nowrap;
+    border-bottom:1px solid var(--border);
+  }
+  tbody td{
+    padding:9px 13px;
+    font-size:13px;
+    border-bottom:1px solid var(--border);
+    max-width:190px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:var(--bg-soft)}
+  tbody tr.flag td{background:var(--warn-bg)}
+  tbody tr.flag:hover td{background:#fdf0dd}
+  td.mono{font-family:var(--mono);font-size:12.5px}
+  td.num {font-family:var(--mono);font-size:12.5px;text-align:right}
+  td.dim {color:var(--text-3)}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:11.5px;font-weight:500;
+    padding:3px 9px;border-radius:99px;
+  }
+  .pill-ok{background:var(--accent-bg);color:var(--accent)}
+  .pill-wn{background:#fdeccd;color:var(--warn)}
+
+  .tbl-note{
+    font-size:12.5px;color:var(--text-3);
+    margin-bottom:9px;
+  }
+
+  /* ── Raw toggle ──────────────────────────── */
+  .raw-btn{
+    display:none;
+    background:none;border:none;cursor:pointer;
+    font-size:13px;color:var(--text-3);
+    padding:7px 0 0;
+    font-family:var(--font);
+  }
+  .raw-btn:hover{color:var(--text)}
+  .raw{
+    display:none;
+    margin-top:10px;
+    background:var(--bg-sunken);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    font-family:var(--mono);
+    font-size:12px;line-height:1.75;
+    color:var(--text-2);
+    max-height:280px;overflow-y:auto;
+    white-space:pre-wrap;word-break:break-all;
+  }
+  .raw.on{display:block}
+
+  #results{display:none}
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:640px){
+    .hero h1{font-size:26px}
+    .stats{grid-template-columns:1fr}
+    .wrap{padding:32px 16px 80px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">◈</div>
+  <span class="topbar-title">거래명세서 추출기</span>
+  <span class="topbar-badge">브라우저에서 처리</span>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>PDF를 엑셀 원장으로</h1>
+    <p>거래명세서 PDF를 올리면 공급자·납품처·품목을 읽어 엑셀로 정리합니다.</p>
+  </div>
+
+  <!-- 1. 업로드 -->
+  <div class="card">
+    <div class="card-h">
+      <span class="n">1</span>
+      <h2>파일 선택</h2>
+      <span class="meta" id="meta1">PDF · 여러 개 가능</span>
+    </div>
+
+    <div class="callout warn">
+      <span class="ico">⚠️</span>
+      <div>
+        <strong>텍스트가 들어 있는 PDF</strong>만 읽을 수 있습니다.
+        스캔한 이미지 PDF는 품목이 <code>0</code>개로 나옵니다 — 그럴 땐 아래 원문 보기로 확인하세요.
+      </div>
+    </div>
+
+    <div class="drop" id="drop" role="button" tabindex="0"
+         onclick="document.getElementById('fi').click()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fi').click()}">
+      <div class="drop-ico">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <p class="drop-t">PDF를 끌어다 놓거나 클릭해서 선택</p>
+      <p class="drop-s">여러 파일을 한 번에 올릴 수 있어요</p>
+    </div>
+    <input type="file" id="fi" accept=".pdf" multiple>
+
+    <div class="files" id="files"></div>
+  </div>
+
+  <!-- 2. 추출 -->
+  <div class="card">
+    <div class="card-h">
+      <span class="n">2</span>
+      <h2>추출</h2>
+      <span class="meta" id="meta2">대기 중</span>
+    </div>
+
+    <button class="btn btn-p" id="run" disabled onclick="runExtract()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      추출 시작
+    </button>
+
+    <div class="prog" id="prog">
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-lbl">
+        <span id="progLbl"></span>
+        <span class="prog-pct" id="progPct">0%</span>
+      </div>
+    </div>
+
+    <div class="console" id="console"></div>
+
+    <button class="raw-btn" id="rawBtn" onclick="toggleRaw()">원문 텍스트 보기</button>
+    <pre class="raw" id="raw"></pre>
+  </div>
+
+  <!-- 3. 결과 -->
+  <div class="card" id="results">
+    <div class="card-h">
+      <span class="n">3</span>
+      <h2>결과</h2>
+      <span class="meta" id="meta3"></span>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <p class="tbl-note" id="tblNote"></p>
+    <div class="tbl-wrap"><div class="tbl-scroll" id="tbl"></div></div>
+
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="downloadXlsx()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        엑셀 다운로드
+      </button>
+      <button class="btn btn-s" onclick="resetAll()">새로 시작</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+'use strict';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const OUTPUT_COLUMNS = [
+  'Dealer Name','Dealer TAX ID','End User Name','End User TAX ID',
+  'Document No','Date','Material Desc','Material Code','Unit','Qty',
+  'EDI Code','Insurance Code','Source File','Review Flag','Review Reason'
+];
+const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC']);
+
+let files = [], rows = [], rawLines = [];
+
+/* ── utils ─────────────────────────────────── */
+const digitsOnly       = s => (s||'').replace(/\D/g,'');
+const cleanCompanyName = s => (s||'').replace(/\s+/g,' ').trim();
+const normalizeDesc    = s => (s||'').replace(/\s+/g,' ').trim();
+const isEdiCode        = t => /^\d{2}[A-Z0-9]+$/.test((t||'').trim());
+const isInsuranceCode  = t => { const c=(t||'').trim(); return c==='비보험' || /^[BM]\d{7,}$/.test(c); };
+const isUnitToken      = t => VALID_UNITS.has((t||'').trim());
+
+function extractBusinessIds(line){
+  const ids=[];
+  for(const m of (line.match(/\d[\d\s\-]+\d/g)||[])){
+    const d=digitsOnly(m);
+    if(d.length>=10) ids.push(d);
+  }
+  return ids;
+}
+
+/* ── PDF → lines ───────────────────────────── */
+async function readPdfLines(file){
+  const ab  = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+  const out = [];
+
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const tc   = await page.getTextContent();
+
+    const items=[];
+    for(const it of tc.items){
+      if(!it.str) continue;
+      const x=it.transform[4], y=it.transform[5];
+      const fs=Math.max(Math.abs(it.transform[0]),Math.abs(it.transform[3]))||10;
+      const w=(it.width&&it.width>0)?it.width:fs*it.str.length*0.55;
+      items.push({x,y,str:it.str,w,fs});
+    }
+    if(!items.length){ out.push(''); continue; }
+
+    items.sort((a,b)=>b.y-a.y||a.x-b.x);
+
+    const groups=[];
+    for(const it of items){
+      const tol=it.fs*0.5;
+      let placed=false;
+      for(const g of groups){
+        if(Math.abs(g.refY-it.y)<=tol){
+          g.items.push(it);
+          g.refY=g.items.reduce((s,i)=>s+i.y,0)/g.items.length;
+          placed=true; break;
+        }
+      }
+      if(!placed) groups.push({refY:it.y,items:[it]});
+    }
+    groups.sort((a,b)=>b.refY-a.refY);
+
+    for(const g of groups){
+      g.items.sort((a,b)=>a.x-b.x);
+      let line='',prevEnd=null,prevFs=10;
+      for(const it of g.items){
+        if(prevEnd!==null){
+          const gap=it.x-prevEnd;
+          if(gap>Math.min(prevFs,it.fs)*0.25 && !line.endsWith(' ')) line+=' ';
+        }
+        line+=it.str; prevEnd=it.x+it.w; prevFs=it.fs;
+      }
+      const t=line.replace(/\s+/g,' ').trim();
+      if(t) out.push(t);
+    }
+    out.push('');
+  }
+  return out;
+}
+
+/* ── header ────────────────────────────────── */
+function extractHeader(lines,filename){
+  let supTax='',euTax='',supName='',euName='',docNo='',date='';
+
+  for(const line of lines){
+    if(line.includes('등록번호')){
+      const ids=extractBusinessIds(line);
+      if(ids.length){
+        supTax=supTax||ids[0];
+        if(ids.length>1) euTax=euTax||ids[1];
+      }
+    }
+    if((line.includes('상  호')||line.includes('상 호')||line.includes('상호')) && line.includes('성명')){
+      const rx=/상\s*호\s*(.*?)\s*성명/g;
+      const found=[]; let m;
+      while((m=rx.exec(line))!==null) found.push(cleanCompanyName(m[1]));
+      if(found[0]&&!supName) supName=found[0];
+      if(found[1]&&!euName)  euName =found[1];
+    }
+    if(!date){
+      const dm=line.match(/(\d{1,2})월\s*(\d{1,2})일/);
+      if(dm){
+        const fm=filename.match(/(20\d{6})/);
+        if(fm){
+          const y=fm[1].slice(0,4);
+          const mo=String(parseInt(dm[1],10)).padStart(2,'0');
+          const d =String(parseInt(dm[2],10)).padStart(2,'0');
+          date=`${y}-${mo}-${d}`;
+        }
+      }
+    }
+    const dn=line.match(/^\s*(\d+)\s*-\s*(\d+)\s+/);
+    if(dn) docNo=`${dn[1]}-${dn[2]}`;
+  }
+
+  return {
+    'Dealer Name':supName,
+    'Dealer TAX ID':String(supTax),
+    'End User Name':euName,
+    'End User TAX ID':String(euTax),
+    'Document No':docNo,
+    'Date':date,
+  };
+}
+
+/* ── items ─────────────────────────────────── */
+function splitDescSpecUnitQty(payload){
+  const cleaned=normalizeDesc(payload);
+  const m=cleaned.match(/^(.+?)\s+([A-Z]+)\s+(\d+)$/);
+  if(!m) return {desc:cleaned,code:'',unit:'',qty:''};
+  const body=m[1].trim(),unit=m[2].trim(),qty=m[3].trim();
+  if(!isUnitToken(unit)) return {desc:cleaned,code:'',unit:'',qty:''};
+  if(!body.includes(' ')) return {desc:cleaned,code:'',unit,qty};
+  const i=body.lastIndexOf(' ');
+  return {desc:normalizeDesc(body.slice(0,i)),code:body.slice(i+1).trim(),unit,qty};
+}
+
+function splitRowGroup(g){
+  const m=g[0].match(/^\s*(\d{1,2})\s+(.+?)\s*$/);
+  if(!m) return {remark:'',payload:''};
+  const payload=normalizeDesc(m[2]);
+  if(!payload) return {remark:'',payload:''};
+  const sp=payload.indexOf(' ');
+  if(sp===-1) return isInsuranceCode(payload)?{remark:payload,payload:''}:{remark:'',payload};
+  const first=payload.slice(0,sp), rest=payload.slice(sp+1);
+  return isInsuranceCode(first)
+    ? {remark:first,payload:normalizeDesc(rest)}
+    : {remark:'',payload};
+}
+
+function parseGroupPayload(g){
+  const sr=splitRowGroup(g);
+  let remark=sr.remark;
+  const fp=sr.payload;
+  let desc=normalizeDesc(fp),code='',unit='',qty='',edi='';
+
+  const p=splitDescSpecUnitQty(fp);
+  if(p.code&&p.unit&&p.qty){ desc=p.desc;code=p.code;unit=p.unit;qty=parseInt(p.qty,10); }
+
+  for(let i=1;i<g.length;i++){
+    const c=normalizeDesc(g[i]);
+    if(!c) continue;
+    if(isEdiCode(c)){ edi=c; continue; }
+
+    const t=c.split(/\s+/);
+    const last=t[t.length-1],prev=t[t.length-2];
+
+    if(t.length>=4 && /^\d+$/.test(last) && isUnitToken(prev)){
+      unit=prev; qty=parseInt(last,10);
+      if(isEdiCode(t[t.length-4])){ edi=t[t.length-4]; code=t[t.length-3]; }
+      else{ code=t[t.length-3]; }
+      continue;
+    }
+    if(t.length===3 && /^\d+$/.test(last) && isUnitToken(prev)){
+      code=t[0]; unit=t[1]; qty=parseInt(t[2],10);
+      continue;
+    }
+    const ep=splitDescSpecUnitQty(c);
+    if(ep.code&&ep.unit&&ep.qty){
+      if(!code) code=ep.code;
+      if(!unit) unit=ep.unit;
+      if(!qty)  qty =parseInt(ep.qty,10);
+      if(desc===normalizeDesc(fp)) desc=ep.desc;
+      continue;
+    }
+  }
+
+  if(!code||!unit||!qty){
+    const t=fp.split(/\s+/);
+    const last=t[t.length-1],prev=t[t.length-2];
+    if(t.length>=3 && /^\d+$/.test(last) && isUnitToken(prev)){
+      unit=unit||prev;
+      qty =qty ||parseInt(last,10);
+      code=code||t[t.length-3];
+      desc=normalizeDesc(t.slice(0,-3).join(' '));
+    }
+  }
+
+  if(code && remark===code && !isInsuranceCode(remark)) remark='';
+
+  return {
+    'Material Desc':desc,'Material Code':code,'Unit':unit,
+    'Qty':qty,'EDI Code':edi,'Insurance Code':remark,
+  };
+}
+
+function parseItemRows(lines){
+  const grouped={};
+  let cur=null,inTable=false;
+
+  for(const raw of lines){
+    const s=raw.trim();
+    if(!s) continue;
+    const compact=s.replace(/\s+/g,'');
+
+    if(compact.includes('번호')&&compact.includes('물품명')){ inTable=true;cur=null;continue; }
+    if(!inTable) continue;
+    if(compact.includes('***검수***')||s.includes('***검 수***')){ inTable=false;cur=null;continue; }
+
+    const rm=raw.match(/^\s*(\d{1,2})\s+(.+?)\s*$/);
+    if(rm){ cur=parseInt(rm[1],10); grouped[cur]=[s]; }
+    else if(cur!==null){ grouped[cur].push(s); }
+  }
+
+  return Object.keys(grouped).map(Number).sort((a,b)=>a-b)
+    .map(n=>parseGroupPayload(grouped[n]));
+}
+
+/* ── review ────────────────────────────────── */
+function buildReview(row){
+  const r=[];
+  const desc=String(row['Material Desc']||'');
+  const code=String(row['Material Code']||'');
+  const unit=String(row['Unit']||'');
+  const qty =row['Qty'];
+  const edi =String(row['EDI Code']||'');
+  const ins =String(row['Insurance Code']||'');
+
+  if(!row['Date'])             r.push('Date missing');
+  if(!code)                    r.push('Material Code missing');
+  if(!unit)                    r.push('Unit missing');
+  if(qty===''||qty==null)      r.push('Qty missing');
+  if(!ins)                     r.push('Insurance Code missing');
+  if(desc!==desc.trim())       r.push('Material Desc has surrounding spaces');
+  if(code!==code.trim())       r.push('Material Code has surrounding spaces');
+  if(edi !==edi.trim())        r.push('EDI Code has surrounding spaces');
+  if(desc.includes(' EA ')||desc.endsWith(' EA')||desc.includes(' BOX ')||desc.endsWith(' BOX'))
+    r.push('Unit may still be inside Material Desc');
+
+  return {...row,'Review Flag':r.length?'Y':'N','Review Reason':r.join('; ')};
+}
+
+const hasMeaningfulValue = r =>
+     String(r['Material Desc']||'').trim()!==''
+  || String(r['Material Code']||'').trim()!==''
+  || String(r['Unit']||'').trim()!==''
+  || String(r['Qty']??'')!=='';
+
+/* ── UI ────────────────────────────────────── */
+const drop=document.getElementById('drop');
+const fi  =document.getElementById('fi');
+
+drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop', e=>{
+  e.preventDefault(); drop.classList.remove('over');
+  addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'));
+});
+fi.addEventListener('change',()=>addFiles([...fi.files]));
+
+function addFiles(arr){
+  arr.forEach(f=>{ if(!files.find(x=>x.name===f.name&&x.size===f.size)) files.push(f); });
+  renderFiles();
+}
+function removeFile(i){ files.splice(i,1); renderFiles(); }
+
+function renderFiles(){
+  const el=document.getElementById('files');
+  el.innerHTML='';
+  files.forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.className='file';
+    d.innerHTML=`
+      <span class="file-ico">PDF</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${(f.size/1024).toFixed(0)} KB</span>
+      <button class="file-x" onclick="removeFile(${i})" aria-label="제거">✕</button>`;
+    el.appendChild(d);
+  });
+  el.classList.toggle('on', files.length>0);
+  document.getElementById('run').disabled = files.length===0;
+  document.getElementById('meta1').textContent =
+    files.length ? `${files.length}개 선택됨` : 'PDF · 여러 개 가능';
+}
+
+function say(msg,cls=''){
+  const c=document.getElementById('console');
+  c.classList.add('on');
+  const d=document.createElement('div');
+  d.className='c-line'+(cls?' c-'+cls:'');
+  d.textContent=msg;
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+}
+function prog(pct,label=''){
+  document.getElementById('prog').classList.add('on');
+  if(pct!=null){
+    document.getElementById('progFill').style.width=pct+'%';
+    document.getElementById('progPct').textContent=pct+'%';
+  }
+  if(label) document.getElementById('progLbl').textContent=label;
+}
+function toggleRaw(){
+  const r=document.getElementById('raw');
+  const on=r.classList.toggle('on');
+  document.getElementById('rawBtn').textContent = on?'원문 텍스트 숨기기':'원문 텍스트 보기';
+}
+
+/* ── run ───────────────────────────────────── */
+async function runExtract(){
+  if(!files.length) return;
+  const btn=document.getElementById('run');
+  btn.disabled=true;
+  document.getElementById('console').innerHTML='';
+  document.getElementById('results').style.display='none';
+  document.getElementById('raw').textContent='';
+  document.getElementById('rawBtn').style.display='none';
+  document.getElementById('meta2').textContent='처리 중…';
+  rows=[]; rawLines=[];
+
+  say(`${files.length}개 파일 처리 시작`,'hd');
+  prog(0,'준비 중');
+
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    prog(Math.round(i/files.length*92), f.name);
+    say(`\n${i+1}. ${f.name}`,'hd');
+
+    try{
+      const lines=await readPdfLines(f);
+      const n=lines.filter(l=>l).length;
+
+      rawLines.push(`\n${'─'.repeat(54)}\n${f.name}\n${'─'.repeat(54)}`);
+      rawLines.push(...lines);
+
+      if(n===0){ say('   텍스트 없음 — 스캔 이미지 PDF로 보입니다','warn'); continue; }
+      say(`   텍스트 ${n}줄 추출`);
+
+      const h=extractHeader(lines,f.name);
+      say(`   공급자 ${h['Dealer Name']||'—'} · 납품처 ${h['End User Name']||'—'}`);
+      say(`   문서 ${h['Document No']||'—'} · 납품일 ${h['Date']||'—'}`);
+
+      const valid=parseItemRows(lines)
+        .map(it=>({...h,...it,'Source File':f.name}))
+        .filter(hasMeaningfulValue)
+        .map(buildReview);
+
+      say(`   품목 ${valid.length}개`, valid.length?'ok':'warn');
+      rows.push(...valid);
+
+    }catch(err){
+      say(`   오류 — ${err.message}`,'err');
+    }
+  }
+
+  prog(100,'완료');
+  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
+
+  say(`\n완료 — 총 ${rows.length}개 품목`,'ok');
+  if(flagged) say(`${flagged}개는 확인이 필요합니다`,'warn');
+  if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트를 확인해 보세요.','warn');
+
+  document.getElementById('meta2').textContent='완료';
+  document.getElementById('raw').textContent=rawLines.join('\n');
+  document.getElementById('rawBtn').style.display='block';
+
+  renderResults();
+  btn.disabled=false;
+}
+
+function renderResults(){
+  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
+  const clean=rows.length-flagged;
+
+  document.getElementById('stats').innerHTML=`
+    <div class="stat">
+      <div class="stat-l">추출된 품목</div>
+      <div class="stat-v">${rows.length}<span class="u">개</span></div>
+    </div>
+    <div class="stat ok">
+      <div class="stat-l">정상</div>
+      <div class="stat-v">${clean}<span class="u">개</span></div>
+    </div>
+    <div class="stat ${flagged?'warn':'ok'}">
+      <div class="stat-l">확인 필요</div>
+      <div class="stat-v">${flagged}<span class="u">개</span></div>
+    </div>`;
+
+  const C=[
+    ['Document No','mono'],['Date','mono'],
+    ['Dealer Name',''],['End User Name',''],
+    ['Material Desc',''],['Material Code','mono'],
+    ['Insurance Code','mono'],['EDI Code','mono'],
+    ['Unit','mono'],['Qty','num'],['Review Flag',''],
+  ];
+
+  const pv=rows.slice(0,300);
+  document.getElementById('meta3').textContent=`${rows.length}개`;
+  document.getElementById('tblNote').textContent =
+    rows.length>300
+      ? `앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다`
+      : `전체 ${rows.length}개`;
+
+  let h='<table><thead><tr>';
+  for(const [n] of C) h+=`<th>${n}</th>`;
+  h+='</tr></thead><tbody>';
+
+  for(const r of pv){
+    const flag = r['Review Flag']==='Y';
+    h+=`<tr class="${flag?'flag':''}">`;
+    for(const [n,cls] of C){
+      const v = r[n]==null?'':String(r[n]);
+      if(n==='Review Flag'){
+        h+= flag
+          ? `<td><span class="pill pill-wn" title="${(r['Review Reason']||'').replace(/"/g,'&quot;')}">확인 필요</span></td>`
+          : `<td><span class="pill pill-ok">정상</span></td>`;
+      } else {
+        h+=`<td class="${cls}${v?'':' dim'}" title="${v.replace(/"/g,'&quot;')}">${v||'—'}</td>`;
+      }
+    }
+    h+='</tr>';
+  }
+  h+='</tbody></table>';
+
+  document.getElementById('tbl').innerHTML=h;
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── excel ─────────────────────────────────── */
+function downloadXlsx(){
+  if(!rows.length) return;
+  const wb=XLSX.utils.book_new();
+  const sheet = data => XLSX.utils.json_to_sheet(
+    data.map(r=>{ const o={}; for(const c of OUTPUT_COLUMNS) o[c]=r[c]??''; return o; }),
+    {header:OUTPUT_COLUMNS}
+  );
+
+  XLSX.utils.book_append_sheet(wb, sheet(rows), '전체');
+
+  const eus=[...new Set(rows.map(r=>r['End User Name']||'미분류'))];
+  const used=new Set(['전체']);
+  for(const eu of eus){
+    let sn=(eu||'미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31)||'미분류';
+    let base=sn,n=2;
+    while(used.has(sn)){ sn=base.slice(0,28)+'_'+n; n++; }
+    used.add(sn);
+    XLSX.utils.book_append_sheet(wb, sheet(rows.filter(r=>(r['End User Name']||'미분류')===eu)), sn);
+  }
+  XLSX.writeFile(wb,'merged_receipts_extracted.xlsx');
+}
+
+function resetAll(){
+  files=[]; rows=[]; rawLines=[];
+  fi.value='';
+  renderFiles();
+  document.getElementById('console').innerHTML='';
+  document.getElementById('console').classList.remove('on');
+  document.getElementById('prog').classList.remove('on');
+  document.getElementById('results').style.display='none';
+  document.getElementById('raw').classList.remove('on');
+  document.getElementById('rawBtn').style.display='none';
+  document.getElementById('meta2').textContent='대기 중';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
