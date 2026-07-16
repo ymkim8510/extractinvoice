@@ -393,10 +393,20 @@ function parseItemRows(lines){
   for(const raw of lines){
     const s=raw.trim(); if(!s) continue;
     const compact=s.replace(/\s+/g,'');
-    if(compact.includes('번호')&&compact.includes('물품명')){ inTable=true;cur=null;continue; }
-    if(!inTable) continue;
+   if(
+   compact.includes('번호') &&
+   (
+      compact.includes('물품명') ||
+      compact.includes('품명') ||
+      compact.includes('물품코드')
+   )
+){
+    inTable=true;
+    cur=null;
+    continue;
+};
     if(compact.includes('***검수***')||s.includes('***검 수***')){ inTable=false;cur=null;continue; }
-    const rm=raw.match(/^\s*(\d{1,2})\s+(.+?)\s*$/);
+const rm=raw.match(/^\s*(\d{1,3})\s+(.+?)\s*$/);
     if(rm){ cur=parseInt(rm[1],10); grouped[cur]=[s]; }
     else if(cur!==null){ grouped[cur].push(s); }
   }
