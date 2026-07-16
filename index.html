@@ -1,179 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>거래명세서 추출기</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#fff; --bg-soft:#f7f7f8; --bg-sunken:#f4f4f5;
-    --border:#e5e5e5; --border-2:#d9d9e3;
-    --text:#0d0d0d; --text-2:#5d5d5d; --text-3:#8e8ea0;
-    --accent:#10a37f; --accent-h:#0d8a6c; --accent-bg:#e7f6f1;
-    --warn:#b45309; --warn-bg:#fef7ec;
-    --err:#dc2626; --err-bg:#fef2f2;
-    --radius:12px; --radius-lg:16px; --radius-sm:8px;
-    --shadow:0 1px 2px rgba(0,0,0,.03),0 4px 12px rgba(0,0,0,.04);
-    --font:'Inter','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;min-height:100vh}
-  .topbar{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);z-index:10}
-  .logo{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
-  .topbar-title{font-size:15px;font-weight:600}
-  .topbar-badge{margin-left:auto;font-size:12px;color:var(--text-3);background:var(--bg-soft);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-weight:500}
-  .wrap{max-width:900px;margin:0 auto;padding:44px 24px 100px}
-  .hero{text-align:center;margin-bottom:40px}
-  .hero h1{font-size:32px;font-weight:600;line-height:1.25;margin-bottom:10px}
-  .hero p{font-size:15px;color:var(--text-2);max-width:50ch;margin:0 auto}
-  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
-  .card-h{display:flex;align-items:center;gap:9px;margin-bottom:16px}
-  .card-h h2{font-size:15px;font-weight:600}
-  .card-h .n{width:22px;height:22px;border-radius:50%;background:var(--bg-sunken);color:var(--text-2);font-size:11px;font-weight:600;display:grid;place-items:center}
-  .card-h .meta{margin-left:auto;font-size:13px;color:var(--text-3)}
-  .callout{display:flex;gap:10px;background:var(--bg-soft);border-radius:var(--radius);padding:12px 14px;font-size:13.5px;color:var(--text-2);line-height:1.6;margin-bottom:16px}
-  .callout.warn{background:var(--warn-bg);color:#7c4a10}
-  .callout strong{color:var(--text);font-weight:600}
-  .callout code{font-family:var(--mono);font-size:12.5px;background:var(--bg-sunken);padding:1px 5px;border-radius:4px}
-  .drop{border:1.5px dashed var(--border-2);border-radius:var(--radius);background:var(--bg-soft);padding:40px 20px;text-align:center;cursor:pointer;transition:all .16s ease}
-  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-bg)}
-  .drop-ico{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;color:var(--text-3)}
-  .drop-t{font-size:14.5px;font-weight:500;margin-bottom:3px}
-  .drop-s{font-size:13px;color:var(--text-3)}
-  #fi{display:none}
-  .files{display:none;flex-direction:column;gap:8px;margin-top:14px}
-  .files.on{display:flex}
-  .file{display:flex;align-items:center;gap:11px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px}
-  .file-ico{width:28px;height:28px;border-radius:6px;background:var(--err-bg);color:var(--err);display:grid;place-items:center;font-size:9px;font-weight:700}
-  .file-name{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .file-size{font-size:12px;color:var(--text-3);font-family:var(--mono)}
-  .file-x{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:2px 4px;border-radius:4px}
-  .file-x:hover{color:var(--err);background:var(--err-bg)}
-  .btn{font-family:var(--font);font-size:14px;font-weight:500;padding:10px 18px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
-  .btn-p{background:var(--accent);color:#fff}
-  .btn-p:hover:not(:disabled){background:var(--accent-h)}
-  .btn-p:disabled{background:var(--bg-sunken);color:var(--text-3);cursor:not-allowed}
-  .btn-s{background:var(--bg);color:var(--text);border-color:var(--border-2)}
-  .btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
-  .prog{display:none;margin-top:16px}
-  .prog.on{display:block}
-  .prog-bar{height:6px;background:var(--bg-sunken);border-radius:99px;overflow:hidden}
-  .prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .35s}
-  .prog-lbl{font-size:13px;color:var(--text-2);margin-top:8px;display:flex;justify-content:space-between}
-  .prog-pct{font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
-  .console{display:none;margin-top:16px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.9;max-height:240px;overflow-y:auto;color:var(--text-2)}
-  .console.on{display:block}
-  .c-line{white-space:pre-wrap}
-  .c-hd{color:var(--text);font-weight:500}
-  .c-ok{color:var(--accent)}
-  .c-warn{color:var(--warn)}
-  .c-err{color:var(--err)}
-  .raw-btn{display:none;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:7px 0 0;font-family:var(--font)}
-  .raw{display:none;margin-top:10px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--text-2);max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
-  .raw.on{display:block}
-  #results{display:none}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-  .stat{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-  .stat-l{font-size:12.5px;color:var(--text-2);margin-bottom:5px;font-weight:500}
-  .stat-v{font-size:28px;font-weight:600;line-height:1}
-  .stat-v .u{font-size:14px;color:var(--text-3);font-weight:400;margin-left:3px}
-  .stat.ok .stat-v{color:var(--accent)}
-  .stat.warn .stat-v{color:var(--warn)}
-  .verify{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  .verify-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
-  .verify-head.pass{background:var(--accent-bg)}
-  .verify-head.warn{background:var(--warn-bg)}
-  .verify-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff}
-  .verify-head.pass .verify-badge{background:var(--accent)}
-  .verify-head.warn .verify-badge{background:var(--warn)}
-  .verify-title{font-size:14px;font-weight:600}
-  .verify-sub{font-size:12.5px;color:var(--text-2)}
-  .verify-body{padding:6px 16px 12px}
-  .check{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--bg-sunken)}
-  .check:last-child{border-bottom:none}
-  .check-mark{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
-  .check-mark.ok{background:var(--accent-bg);color:var(--accent)}
-  .check-mark.no{background:var(--warn-bg);color:var(--warn)}
-  .check-name{font-size:13.5px;font-weight:500}
-  .check-detail{font-size:12.5px;color:var(--text-2);margin-top:2px}
-  .tbl-note{font-size:12.5px;color:var(--text-3);margin-bottom:9px}
-  .tbl-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  .tbl-scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:1050px}
-  thead th{background:var(--bg-soft);font-size:12px;font-weight:600;color:var(--text-2);text-align:left;padding:10px 13px;white-space:nowrap;border-bottom:1px solid var(--border)}
-  tbody td{padding:9px 13px;font-size:13px;border-bottom:1px solid var(--border);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  tbody tr.flag td{background:var(--warn-bg)}
-  td.mono{font-family:var(--mono);font-size:12.5px}
-  td.num{font-family:var(--mono);font-size:12.5px;text-align:right}
-  td.dim{color:var(--text-3)}
-  .pill{display:inline-flex;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:99px}
-  .pill-ok{background:var(--accent-bg);color:var(--accent)}
-  .pill-wn{background:#fdeccd;color:var(--warn)}
-  @media (max-width:640px){.hero h1{font-size:26px}.stats{grid-template-columns:1fr}.wrap{padding:32px 16px 80px}}
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <div class="logo">◈</div>
-  <span class="topbar-title">거래명세서 추출기</span>
-  <span class="topbar-badge">브라우저에서 처리</span>
-</div>
-
-<div class="wrap">
-  <div class="hero">
-    <h1>PDF를 엑셀 원장으로</h1>
-    <p>거래명세서 PDF를 올리면 공급자·납품처·품목을 읽고, Excel 파일로 내려받을 수 있습니다.</p>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="n">1</span><h2>파일 선택</h2><span class="meta" id="meta1">PDF · 여러 개 가능</span></div>
-    <div class="callout warn">
-      <span>⚠️</span>
-      <div><strong>텍스트 PDF</strong> 기준입니다. 스캔 이미지 PDF는 브라우저만으로는 OCR이 되지 않아 품목이 <code>0</code>개로 나올 수 있습니다.</div>
-    </div>
-    <div class="drop" id="drop" role="button" tabindex="0"
-         onclick="document.getElementById('fi').click()"
-         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fi').click()}">
-      <div class="drop-ico">PDF</div>
-      <p class="drop-t">PDF를 끌어다 놓거나 클릭해서 선택</p>
-      <p class="drop-s">여러 파일을 한 번에 올릴 수 있어요</p>
-    </div>
-    <input type="file" id="fi" accept=".pdf" multiple>
-    <div class="files" id="files"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="n">2</span><h2>추출 & 검증</h2><span class="meta" id="meta2">대기 중</span></div>
-    <button class="btn btn-p" id="run" disabled onclick="runExtract()">추출 시작</button>
-    <div class="prog" id="prog">
-      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-      <div class="prog-lbl"><span id="progLbl"></span><span class="prog-pct" id="progPct">0%</span></div>
-    </div>
-    <div class="console" id="console"></div>
-    <button class="raw-btn" id="rawBtn" onclick="toggleRaw()">원문 텍스트 보기</button>
-    <pre class="raw" id="raw"></pre>
-  </div>
-
-  <div class="card" id="results">
-    <div class="card-h"><span class="n">3</span><h2>결과 & 검증 리포트</h2><span class="meta" id="meta3"></span></div>
-    <div class="verify" id="verify"></div>
-    <div class="stats" id="stats"></div>
-    <p class="tbl-note" id="tblNote"></p>
-    <div class="tbl-wrap"><div class="tbl-scroll" id="tbl"></div></div>
-    <div class="btn-row">
-      <button class="btn btn-p" onclick="downloadXlsx()">엑셀 다운로드</button>
-      <button class="btn btn-s" onclick="resetAll()">새로 시작</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 'use strict';
 
@@ -181,26 +5,31 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const OUTPUT_COLUMNS = [
-  'Dealer Name','Dealer TAX ID','End User Name','End User TAX ID',
-  'Document No','Date','Material Desc','Material Code','Unit','Qty',
-  'EDI Code','Insurance Code','Source File','Review Flag','Review Reason'
+  '공급자명',
+  '공급자 사업자등록번호',
+  '납품처명',
+  '납품처 사업자등록번호',
+  '물품코드(규격)',
+  '수량',
+  'UOM',
+  'EDI Code',
+  'Source File',
+  'Page',
+  'Review Flag',
+  'Review Reason'
 ];
 
-const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC','PACK']);
-const INSURANCE_RX = /^(비보험|[BM]\d{7,}|G\d{7,})$/;
-const HOSPITAL_CODE_RX = /^\d{5,8}$/;
+const VALID_UOM = new Set(['EA', 'BOX', 'PACK', 'PAC', 'PK', 'SET']);
+const EDI_PATTERN = /^(비보험|[A-Z][A-Z0-9]{6,}|[BMGT]\d{6,})$/i;
 
 let files = [];
 let rows = [];
 let rawLines = [];
 let docStats = [];
 
-const clean = s => String(s ?? '').replace(/\s+/g,' ').trim();
-const digitsOnly = s => String(s ?? '').replace(/\D/g,'');
-const isUnit = s => VALID_UNITS.has(clean(s));
-const isInsurance = s => INSURANCE_RX.test(clean(s));
-const isRowNo = s => /^\d{1,3}$/.test(clean(s));
-const isHospitalCode = s => HOSPITAL_CODE_RX.test(clean(s));
+const clean = v => String(v ?? '').replace(/\s+/g, ' ').trim();
+const compact = v => clean(v).replace(/\s+/g, '');
+const digitsOnly = v => String(v ?? '').replace(/\D/g, '');
 
 function escapeHtml(s){
   return String(s ?? '')
@@ -210,146 +39,65 @@ function escapeHtml(s){
     .replace(/"/g,'&quot;');
 }
 
-function extractBusinessIds(line){
-  const ids = [];
-  for(const m of (String(line).match(/\d[\d\s\-]+\d/g) || [])){
-    const d = digitsOnly(m);
-    if(d.length >= 10) ids.push(d);
-  }
-  return ids;
+function isTaxId(s){
+  return digitsOnly(s).length === 10;
+}
+
+function normalizeTaxId(s){
+  const d = digitsOnly(s);
+  if(d.length !== 10) return clean(s);
+  return `${d.slice(0,3)}-${d.slice(3,5)}-${d.slice(5)}`;
+}
+
+function isUom(s){
+  return VALID_UOM.has(clean(s).toUpperCase());
+}
+
+function isEdiCode(s){
+  return EDI_PATTERN.test(clean(s));
+}
+
+function isRowNo(s){
+  return /^\d{1,4}$/.test(clean(s));
+}
+
+function isQty(s){
+  return /^\d{1,6}$/.test(clean(s).replace(/,/g,''));
+}
+
+function toQty(s){
+  const n = Number(clean(s).replace(/,/g,''));
+  return Number.isFinite(n) ? n : '';
 }
 
 function blankHeader(){
   return {
-    'Dealer Name':'',
-    'Dealer TAX ID':'',
-    'End User Name':'',
-    'End User TAX ID':'',
-    'Document No':'',
-    'Date':''
+    supplierName: '',
+    supplierTaxId: '',
+    endUserName: '',
+    endUserTaxId: ''
   };
 }
 
-function mergeHeader(base, add){
-  const out = {...base};
-  for(const k of Object.keys(out)){
-    if(!out[k] && add[k]) out[k] = add[k];
-  }
-  return out;
-}
-
-function extractHeaderFromLines(lines, filename, previousHeader = blankHeader()){
-  const h = blankHeader();
-
-  for(const lineRaw of lines){
-    const line = clean(lineRaw);
-    const compact = line.replace(/\s+/g,'');
-
-    const ids = extractBusinessIds(line);
-    if(ids.length){
-      if(!h['Dealer TAX ID']) h['Dealer TAX ID'] = ids[0];
-      if(ids.length > 1 && !h['End User TAX ID']) h['End User TAX ID'] = ids[1];
-    }
-
-    if(/거래병원|거\s*래\s*병\s*원/.test(compact)){
-      const m = line.match(/거\s*래\s*병\s*원\s*(.+)$/);
-      if(m && !h['End User Name']) h['End User Name'] = clean(m[1]);
-    }
-
-    if(line.includes('서울아산병원') && !h['End User Name']) {
-      h['End User Name'] = '서울아산병원';
-    }
-
-    if(line.includes('국립암') && !h['End User Name']) {
-      h['End User Name'] = line.includes('국립암센타') ? '국립암센타' : '국립암센터';
-    }
-
-    if(line.includes('주식회사 세원메디') && !h['Dealer Name']) {
-      h['Dealer Name'] = '주식회사 세원메디';
-    }
-
-    if(line.includes('(주)아산메디칼') && !h['Dealer Name']) {
-      h['Dealer Name'] = '(주)아산메디칼';
-    }
-
-    if((line.includes('상 호') || line.includes('상호') || compact.includes('상호')) && line.includes('성명')){
-      const rx = /상\s*호\s*(.*?)\s*성명/g;
-      const found = [];
-      let m;
-      while((m = rx.exec(line)) !== null){
-        const name = clean(m[1]);
-        if(name) found.push(name);
-      }
-      if(found[0] && !h['Dealer Name']) h['Dealer Name'] = found[0];
-      if(found[1] && !h['End User Name']) h['End User Name'] = found[1];
-    }
-
-    if(!h['Document No']){
-      const m1 = line.match(/세금계산서번호\s*([^\s]+)/);
-      if(m1) h['Document No'] = clean(m1[1]);
-
-      const m2 = line.match(/^\s*(\d+)\s*-\s*(\d+)\s+/);
-      if(m2) h['Document No'] = `${m2[1]}-${m2[2]}`;
-    }
-
-    if(!h['Date']){
-      const ymd = line.match(/(20\d{2})[-./년\s]*(\d{1,2})[-./월\s]*(\d{1,2})/);
-      if(ymd){
-        h['Date'] = `${ymd[1]}-${String(+ymd[2]).padStart(2,'0')}-${String(+ymd[3]).padStart(2,'0')}`;
-      }
-
-      const md = line.match(/(\d{1,2})월\s*(\d{1,2})일/);
-      if(md){
-        const fm = filename.match(/(20\d{6})/);
-        if(fm){
-          const y = fm[1].slice(0,4);
-          h['Date'] = `${y}-${String(+md[1]).padStart(2,'0')}-${String(+md[2]).padStart(2,'0')}`;
-        }
-      }
-
-      const ym = filename.match(/(20\d{2})(\d{2})/);
-      if(!h['Date'] && ym && line.includes('거래일자')){
-        h['Date'] = `${ym[1]}-${ym[2]}-`;
-      }
-    }
-  }
-
-  return mergeHeader(previousHeader, h);
-}
-
-function groupTextItems(items){
-  if(!items.length) return [];
-
-  const sorted = [...items].sort((a,b) => b.y - a.y || a.x - b.x);
-  const groups = [];
-
-  for(const it of sorted){
-    const tol = Math.max(2.5, it.fs * 0.45);
-    let g = groups.find(gr => Math.abs(gr.y - it.y) <= tol);
-    if(!g){
-      g = { y: it.y, items: [] };
-      groups.push(g);
-    }
-    g.items.push(it);
-    g.y = g.items.reduce((s,x) => s + x.y, 0) / g.items.length;
-  }
-
-  groups.sort((a,b) => b.y - a.y);
-  for(const g of groups){
-    g.items.sort((a,b) => a.x - b.x);
-    g.text = clean(g.items.map(x => x.str).join(' '));
-  }
-  return groups;
+function mergeHeader(prev, cur){
+  return {
+    supplierName: cur.supplierName || prev.supplierName || '',
+    supplierTaxId: cur.supplierTaxId || prev.supplierTaxId || '',
+    endUserName: cur.endUserName || prev.endUserName || '',
+    endUserTaxId: cur.endUserTaxId || prev.endUserTaxId || ''
+  };
 }
 
 async function readPdfPages(file){
   const ab = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+  const pdf = await pdfjsLib.getDocument({data: ab}).promise;
   const pages = [];
 
-  for(let p=1; p<=pdf.numPages; p++){
+  for(let p = 1; p <= pdf.numPages; p++){
     const page = await pdf.getPage(p);
     const tc = await page.getTextContent();
+    const viewport = page.getViewport({scale: 1});
+
     const items = [];
 
     for(const it of tc.items){
@@ -361,226 +109,337 @@ async function readPdfPages(file){
       const fs = Math.max(Math.abs(it.transform[0]), Math.abs(it.transform[3])) || 10;
       const w = it.width && it.width > 0 ? it.width : fs * str.length * 0.55;
 
-      items.push({x,y,w,fs,str});
+      items.push({str, x, y, w, fs});
     }
 
-    const groups = groupTextItems(items);
-    const lines = groups.map(g => g.text).filter(Boolean);
-    pages.push({pageNo:p, items, groups, lines});
+    const lines = groupItemsToLines(items);
+    pages.push({
+      pageNo: p,
+      width: viewport.width,
+      height: viewport.height,
+      items,
+      lines
+    });
   }
 
   return pages;
 }
 
-function getCellTextByHeader(group, headerXs){
-  const result = {
-    no:'', hospitalCode:'', desc:'', spec:'', unit:'', qty:'', insurance:'', amount:'', remark:''
-  };
+function groupItemsToLines(items){
+  const sorted = [...items].sort((a,b) => b.y - a.y || a.x - b.x);
+  const groups = [];
 
-  if(!headerXs || !Object.keys(headerXs).length) return result;
+  for(const it of sorted){
+    const tol = Math.max(2.5, it.fs * 0.45);
+    let g = groups.find(x => Math.abs(x.y - it.y) <= tol);
 
-  const order = Object.entries(headerXs).sort((a,b) => a[1] - b[1]);
-  const bounds = [];
-
-  for(let i=0; i<order.length; i++){
-    const left = i === 0 ? -Infinity : (order[i-1][1] + order[i][1]) / 2;
-    const right = i === order.length - 1 ? Infinity : (order[i][1] + order[i+1][1]) / 2;
-    bounds.push({key:order[i][0], left, right});
-  }
-
-  for(const it of group.items){
-    const b = bounds.find(x => it.x >= x.left && it.x < x.right);
-    if(!b) continue;
-    result[b.key] = clean(result[b.key] + ' ' + it.str);
-  }
-
-  return result;
-}
-
-function detectHeaderXs(groups){
-  for(const g of groups){
-    const compact = g.text.replace(/\s+/g,'');
-    const looksHeader =
-      compact.includes('번호') &&
-      (
-        compact.includes('물품코드') ||
-        compact.includes('품명') ||
-        compact.includes('규격')
-      );
-
-    if(!looksHeader) continue;
-
-    const xs = {};
-    for(const it of g.items){
-      const c = it.str.replace(/\s+/g,'');
-      if(c.includes('번호')) xs.no = it.x;
-      else if(c.includes('물품코드')) xs.hospitalCode = it.x;
-      else if(c.includes('품명')) xs.desc = it.x;
-      else if(c.includes('규격')) xs.spec = it.x;
-      else if(c.includes('단위')) xs.unit = it.x;
-      else if(c.includes('수량')) xs.qty = it.x;
-      else if(c.includes('단가')) xs.insurance = it.x;
-      else if(c.includes('금액')) xs.amount = it.x;
-      else if(c.includes('비고')) xs.remark = it.x;
+    if(!g){
+      g = {y: it.y, items: []};
+      groups.push(g);
     }
 
-    if(xs.no && (xs.hospitalCode || xs.desc)) return xs;
+    g.items.push(it);
+    g.y = g.items.reduce((s,v) => s + v.y, 0) / g.items.length;
   }
+
+  groups.sort((a,b) => b.y - a.y);
+
+  for(const g of groups){
+    g.items.sort((a,b) => a.x - b.x);
+    g.text = clean(g.items.map(x => x.str).join(' '));
+  }
+
+  return groups;
+}
+
+function extractHeader(page, previousHeader){
+  const result = blankHeader();
+
+  for(const line of page.lines){
+    const text = clean(line.text);
+    const c = compact(text);
+
+    const taxIds = [];
+    for(const it of line.items){
+      if(isTaxId(it.str)) taxIds.push({value: normalizeTaxId(it.str), x: it.x});
+    }
+
+    if(taxIds.length >= 2){
+      taxIds.sort((a,b) => a.x - b.x);
+      if(!result.supplierTaxId) result.supplierTaxId = taxIds[0].value;
+      if(!result.endUserTaxId) result.endUserTaxId = taxIds[taxIds.length - 1].value;
+    }
+
+    if(c.includes('상호')){
+      const foundNames = extractCompanyNamesFromLine(line);
+      if(foundNames.length >= 1 && !result.supplierName) result.supplierName = foundNames[0];
+      if(foundNames.length >= 2 && !result.endUserName) result.endUserName = foundNames[1];
+    }
+
+    if(!result.endUserName && text.includes('서울아산병원')){
+      result.endUserName = '서울아산병원';
+    }
+
+    if(!result.endUserName && (text.includes('국립암센터') || text.includes('국립암센타'))){
+      result.endUserName = text.includes('국립암센타') ? '국립암센타' : '국립암센터';
+    }
+
+    if(!result.supplierName && text.includes('주식회사 세원메디')){
+      result.supplierName = '주식회사 세원메디';
+    }
+
+    if(!result.supplierName && text.includes('아산메디칼')){
+      result.supplierName = text.includes('(주)아산메디칼') ? '(주)아산메디칼' : '아산메디칼';
+    }
+  }
+
+  return mergeHeader(previousHeader, result);
+}
+
+function extractCompanyNamesFromLine(line){
+  const items = [...line.items].sort((a,b) => a.x - b.x);
+  const names = [];
+
+  for(let i = 0; i < items.length; i++){
+    const t = compact(items[i].str);
+
+    if(t.includes('상호')){
+      for(let j = i + 1; j < items.length; j++){
+        const candidate = clean(items[j].str);
+        const cc = compact(candidate);
+
+        if(!candidate) continue;
+        if(cc.includes('성명')) break;
+        if(cc.includes('상호')) break;
+        if(cc.includes('사업자등록번호')) break;
+        if(cc.includes('공급자')) continue;
+        if(cc.includes('공급받는자')) continue;
+
+        names.push(candidate);
+        break;
+      }
+    }
+  }
+
+  return names.filter(Boolean);
+}
+
+function detectTableHeader(page){
+  for(const line of page.lines){
+    const c = compact(line.text);
+
+    const isHeader =
+      c.includes('번호') &&
+      (
+        c.includes('물품코드') ||
+        c.includes('EDI코드') ||
+        c.includes('품명') ||
+        c.includes('물품명')
+      ) &&
+      (
+        c.includes('수량') ||
+        c.includes('단위')
+      );
+
+    if(!isHeader) continue;
+
+    const xs = {};
+    const items = [...line.items].sort((a,b) => a.x - b.x);
+
+    for(const it of items){
+      const t = compact(it.str);
+
+      if(t.includes('번호') && xs.no == null) xs.no = it.x;
+      else if(t.includes('물품코드') && xs.itemCode == null) xs.itemCode = it.x;
+      else if(t.includes('EDI코드') && xs.edi == null) xs.edi = it.x;
+      else if((t.includes('품명') || t.includes('물품명')) && xs.desc == null) xs.desc = it.x;
+      else if(t.includes('규격') && xs.spec == null) xs.spec = it.x;
+      else if(t.includes('단위') && xs.uom == null) xs.uom = it.x;
+      else if(t.includes('수량') && xs.qty == null) xs.qty = it.x;
+      else if(t.includes('단가') && xs.price == null) xs.price = it.x;
+      else if(t.includes('금액') && xs.amount == null) xs.amount = it.x;
+      else if(t.includes('비고') && xs.remark == null) xs.remark = it.x;
+    }
+
+    if(xs.no != null) return normalizeHeaderXs(xs);
+  }
+
   return null;
 }
 
-function normalizeParsedItem(item){
-  const desc = clean(item['Material Desc']);
-  const code = clean(item['Material Code']);
-  const unit = clean(item['Unit']).toUpperCase();
-  let qty = clean(item['Qty']);
-  qty = qty === '' ? '' : Number(String(qty).replace(/[^\d.-]/g,''));
+function normalizeHeaderXs(xs){
+  const pairs = Object.entries(xs)
+    .filter(([,x]) => x != null)
+    .sort((a,b) => a[1] - b[1]);
 
-  let ins = clean(item['Insurance Code']);
-  const edi = clean(item['EDI Code']);
+  const bounds = [];
 
-  if(!ins && isInsurance(edi)) {
-    ins = edi;
-    item['EDI Code'] = '';
+  for(let i = 0; i < pairs.length; i++){
+    const key = pairs[i][0];
+    const x = pairs[i][1];
+    const left = i === 0 ? -Infinity : (pairs[i-1][1] + x) / 2;
+    const right = i === pairs.length - 1 ? Infinity : (x + pairs[i+1][1]) / 2;
+    bounds.push({key, x, left, right});
   }
 
-  return {
-    ...item,
-    'Material Desc': desc,
-    'Material Code': code,
-    'Unit': unit,
-    'Qty': Number.isFinite(qty) ? qty : '',
-    'Insurance Code': ins
-  };
+  return {xs, bounds};
 }
 
-function parsePageByPosition(page){
-  const headerXs = detectHeaderXs(page.groups);
-  if(!headerXs) return [];
+function splitLineByColumns(line, header){
+  const cells = {
+    no: '',
+    itemCode: '',
+    edi: '',
+    desc: '',
+    spec: '',
+    uom: '',
+    qty: '',
+    price: '',
+    amount: '',
+    remark: ''
+  };
+
+  for(const it of line.items){
+    const b = header.bounds.find(x => it.x >= x.left && it.x < x.right);
+    if(!b) continue;
+    cells[b.key] = clean(cells[b.key] + ' ' + it.str);
+  }
+
+  return cells;
+}
+
+function findEdiFromTexts(texts){
+  for(const t of texts){
+    const parts = clean(t).split(/\s+/);
+    for(const p of parts){
+      if(isEdiCode(p)) return clean(p);
+    }
+  }
+  return '';
+}
+
+function parseItemsByPosition(page){
+  const header = detectTableHeader(page);
+  if(!header) return [];
 
   const out = [];
-  let current = null;
   let started = false;
+  let current = null;
 
   function finalize(){
     if(!current) return;
-    const normalized = normalizeParsedItem(current);
-    if(
-      normalized['Material Desc'] ||
-      normalized['Material Code'] ||
-      normalized['Unit'] ||
-      String(normalized['Qty'] ?? '') ||
-      normalized['Insurance Code']
-    ){
-      out.push(normalized);
+
+    current.spec = clean(current.spec);
+    current.uom = clean(current.uom).toUpperCase();
+    current.qty = toQty(current.qty);
+    current.edi = clean(current.edi);
+
+    if(current.spec || current.qty || current.uom || current.edi){
+      out.push(current);
     }
+
     current = null;
   }
 
-  for(const g of page.groups){
-    const text = clean(g.text);
-    const compact = text.replace(/\s+/g,'');
+  for(const line of page.lines){
+    const c = compact(line.text);
 
-    if(compact.includes('번호') && (compact.includes('품명') || compact.includes('물품코드'))){
+    if(
+      c.includes('번호') &&
+      (
+        c.includes('물품코드') ||
+        c.includes('EDI코드') ||
+        c.includes('품명') ||
+        c.includes('물품명')
+      )
+    ){
       started = true;
       finalize();
       continue;
     }
 
     if(!started) continue;
-    if(compact.includes('검수') || compact.includes('합계') && compact.includes('공급가액')) {
+
+    if(c.includes('검수') || c.includes('담당부서장') || c.includes('합계금액')){
       finalize();
       break;
     }
 
-    const cells = getCellTextByHeader(g, headerXs);
+    const cells = splitLineByColumns(line, header);
+    const allTexts = line.items.map(x => clean(x.str)).filter(Boolean);
+
     let rowNo = clean(cells.no);
 
-    const sortedTexts = g.items.map(x => clean(x.str)).filter(Boolean);
-
-    let rowNoIndex = -1;
-    for(let i=0; i<sortedTexts.length; i++){
-      if(isRowNo(sortedTexts[i])){
-        if(sortedTexts[i+1] && isHospitalCode(sortedTexts[i+1])){
-          rowNoIndex = i;
-          break;
-        }
-      }
-    }
-
-    if(!isRowNo(rowNo) && rowNoIndex >= 0){
-      rowNo = sortedTexts[rowNoIndex];
+    if(!isRowNo(rowNo)){
+      const possible = allTexts.find(isRowNo);
+      if(possible) rowNo = possible;
     }
 
     if(isRowNo(rowNo)){
       finalize();
 
-      let hospitalCode = clean(cells.hospitalCode);
-      let desc = clean(cells.desc);
       let spec = clean(cells.spec);
-      let unit = clean(cells.unit);
       let qty = clean(cells.qty);
-      let insurance = clean(cells.insurance || cells.remark);
+      let uom = clean(cells.uom);
+      let edi = clean(cells.edi || cells.price || cells.remark);
 
-      if(rowNoIndex >= 0){
-        const t = sortedTexts.slice(rowNoIndex + 1);
-        if(!isHospitalCode(hospitalCode) && isHospitalCode(t[0])) hospitalCode = t[0];
-
-        if(!desc && t[1]) desc = t[1];
-        if(!spec && t[2]) spec = t[2];
-        if(!unit && t[3]) unit = t[3];
-        if(!qty && t[4]) qty = t[4];
-        if(!insurance && t[5]) insurance = t[5];
-
-        for(const z of t){
-          if(!insurance && isInsurance(z)) insurance = z;
-        }
-      }
-
-      if(!isUnit(unit)){
-        const unitCandidate = sortedTexts.find(isUnit);
-        if(unitCandidate) unit = unitCandidate;
+      if(!uom){
+        const u = allTexts.find(isUom);
+        if(u) uom = u;
       }
 
       if(!qty){
-        const unitIdx = sortedTexts.findIndex(isUnit);
-        if(unitIdx >= 0 && sortedTexts[unitIdx + 1] && /^\d+$/.test(sortedTexts[unitIdx + 1])){
-          qty = sortedTexts[unitIdx + 1];
+        const uomIndex = allTexts.findIndex(isUom);
+        if(uomIndex >= 0 && allTexts[uomIndex + 1] && isQty(allTexts[uomIndex + 1])){
+          qty = allTexts[uomIndex + 1];
+        } else {
+          const q = allTexts.find(x => isQty(x) && x !== rowNo);
+          if(q) qty = q;
         }
+      }
+
+      if(!edi){
+        edi = findEdiFromTexts([
+          cells.edi,
+          cells.price,
+          cells.amount,
+          cells.remark,
+          ...allTexts
+        ]);
       }
 
       current = {
         rowNo: Number(rowNo),
-        'Material Desc': desc,
-        'Material Code': spec || hospitalCode,
-        'Unit': unit,
-        'Qty': qty,
-        'EDI Code': hospitalCode,
-        'Insurance Code': insurance
+        spec,
+        qty,
+        uom,
+        edi
       };
 
       continue;
     }
 
     if(current){
-      const cells2 = getCellTextByHeader(g, headerXs);
+      const edi = findEdiFromTexts([
+        cells.edi,
+        cells.price,
+        cells.amount,
+        cells.remark,
+        line.text
+      ]);
 
-      if(cells2.desc) {
-        current['Material Desc'] = clean(current['Material Desc'] + ' ' + cells2.desc);
+      if(edi && !current.edi) current.edi = edi;
+
+      if(cells.spec && !current.spec){
+        current.spec = cells.spec;
       }
 
-      if(cells2.spec) {
-        current['Material Code'] = clean(current['Material Code'] + ' ' + cells2.spec);
+      if(cells.qty && !current.qty){
+        current.qty = cells.qty;
       }
 
-      if(cells2.unit && !current['Unit']) current['Unit'] = cells2.unit;
-      if(cells2.qty && !current['Qty']) current['Qty'] = cells2.qty;
-
-      const ins = clean(cells2.insurance || cells2.remark);
-      if(ins && isInsurance(ins) && !current['Insurance Code']) current['Insurance Code'] = ins;
-
-      for(const z of sortedTexts){
-        if(isInsurance(z) && !current['Insurance Code']) current['Insurance Code'] = z;
+      if(cells.uom && !current.uom){
+        current.uom = cells.uom;
       }
     }
   }
@@ -589,135 +448,141 @@ function parsePageByPosition(page){
   return out;
 }
 
-function splitDescSpecUnitQty(payload){
-  const cleaned = clean(payload);
-  const m = cleaned.match(/^(.+?)\s+([A-Z]+)\s+(\d+)$/);
-  if(!m) return {desc:cleaned, code:'', unit:'', qty:''};
-
-  const unit = m[2].trim().toUpperCase();
-  const qty = m[3].trim();
-  if(!isUnit(unit)) return {desc:cleaned, code:'', unit:'', qty:''};
-
-  const body = m[1].trim();
-  const i = body.lastIndexOf(' ');
-  if(i < 0) return {desc:body, code:'', unit, qty};
-
-  return {
-    desc: clean(body.slice(0,i)),
-    code: clean(body.slice(i+1)),
-    unit,
-    qty
-  };
-}
-
-function parsePageByLines(page){
-  const grouped = {};
-  let cur = null;
+function parseItemsByTextFallback(page){
+  const out = [];
   let inTable = false;
+  let current = null;
 
-  for(const raw of page.lines){
-    const s = clean(raw);
-    if(!s) continue;
+  function finalize(){
+    if(!current) return;
 
-    const compact = s.replace(/\s+/g,'');
+    current.spec = clean(current.spec);
+    current.uom = clean(current.uom).toUpperCase();
+    current.qty = toQty(current.qty);
+    current.edi = clean(current.edi);
 
-    if(compact.includes('번호') && (compact.includes('물품명') || compact.includes('품명') || compact.includes('EDI코드'))){
+    if(current.spec || current.qty || current.uom || current.edi){
+      out.push(current);
+    }
+
+    current = null;
+  }
+
+  for(const line of page.lines){
+    const text = clean(line.text);
+    const c = compact(text);
+
+    if(
+      c.includes('번호') &&
+      (
+        c.includes('물품코드') ||
+        c.includes('EDI코드') ||
+        c.includes('품명') ||
+        c.includes('물품명')
+      )
+    ){
       inTable = true;
-      cur = null;
+      finalize();
       continue;
     }
 
     if(!inTable) continue;
 
-    if(compact.includes('검수') || compact.includes('담당부서장')){
-      inTable = false;
-      cur = null;
+    if(c.includes('검수') || c.includes('담당부서장')){
+      finalize();
+      break;
+    }
+
+    const parts = text.split(/\s+/).filter(Boolean);
+    const rowIdx = parts.findIndex(isRowNo);
+
+    if(rowIdx >= 0){
+      finalize();
+
+      const after = parts.slice(rowIdx + 1);
+      const uomIdx = after.findIndex(isUom);
+      const edi = findEdiFromTexts(after);
+      let uom = '';
+      let qty = '';
+      let spec = '';
+
+      if(uomIdx >= 0){
+        uom = after[uomIdx];
+        if(after[uomIdx + 1] && isQty(after[uomIdx + 1])) qty = after[uomIdx + 1];
+
+        if(uomIdx >= 1){
+          spec = after[uomIdx - 1];
+        }
+      }
+
+      if(!spec){
+        const likelySpec = after.find(x => /[A-Za-z0-9]/.test(x) && !isEdiCode(x) && !isUom(x) && !isQty(x));
+        if(likelySpec) spec = likelySpec;
+      }
+
+      current = {
+        rowNo: Number(parts[rowIdx]),
+        spec,
+        qty,
+        uom,
+        edi
+      };
+
       continue;
     }
 
-    const rm = s.match(/^\s*(\d{1,3})\s+(.+?)\s*$/);
-    if(rm){
-      cur = Number(rm[1]);
-      grouped[cur] = [s];
-    } else if(cur !== null) {
-      grouped[cur].push(s);
+    if(current){
+      const edi = findEdiFromTexts(parts);
+      if(edi && !current.edi) current.edi = edi;
+
+      const u = parts.find(isUom);
+      if(u && !current.uom) current.uom = u;
+
+      const q = parts.find(isQty);
+      if(q && !current.qty) current.qty = q;
     }
   }
 
-  const out = [];
-  const nos = Object.keys(grouped).map(Number).sort((a,b) => a-b);
-
-  for(const n of nos){
-    const g = grouped[n];
-    const first = clean(g[0].replace(/^\d{1,3}\s+/, ''));
-    let desc = first;
-    let code = '';
-    let unit = '';
-    let qty = '';
-    let edi = '';
-    let ins = '';
-
-    for(const part of g){
-      const tokens = clean(part).split(/\s+/);
-      for(const t of tokens){
-        if(isInsurance(t)) ins = t;
-      }
-
-      const p = splitDescSpecUnitQty(clean(part.replace(/^\d{1,3}\s+/, '')));
-      if(p.unit && p.qty){
-        desc = p.desc || desc;
-        code = p.code || code;
-        unit = p.unit;
-        qty = p.qty;
-      }
-    }
-
-    out.push(normalizeParsedItem({
-      rowNo:n,
-      'Material Desc':desc,
-      'Material Code':code,
-      'Unit':unit,
-      'Qty':qty,
-      'EDI Code':edi,
-      'Insurance Code':ins
-    }));
-  }
-
+  finalize();
   return out;
 }
 
 function parseItems(page){
-  const byPosition = parsePageByPosition(page);
+  const byPosition = parseItemsByPosition(page);
   if(byPosition.length) return byPosition;
 
-  return parsePageByLines(page);
+  return parseItemsByTextFallback(page);
 }
 
-function buildReview(row){
-  const r = [];
-
-  if(!clean(row['Date'])) r.push('Date missing');
-  if(!clean(row['Dealer Name'])) r.push('Dealer Name missing');
-  if(!clean(row['End User Name'])) r.push('End User Name missing');
-  if(!clean(row['Material Desc'])) r.push('Material Desc missing');
-  if(!clean(row['Material Code'])) r.push('Material Code missing');
-  if(!clean(row['Unit'])) r.push('Unit missing');
-  if(row['Qty'] === '' || row['Qty'] == null) r.push('Qty missing');
-  if(!clean(row['Insurance Code'])) r.push('Insurance Code missing');
-
-  return {
-    ...row,
-    'Review Flag': r.length ? 'Y' : 'N',
-    'Review Reason': r.join('; ')
+function buildOutputRow(header, item, fileName, pageNo){
+  const r = {
+    '공급자명': header.supplierName || '',
+    '공급자 사업자등록번호': header.supplierTaxId || '',
+    '납품처명': header.endUserName || '',
+    '납품처 사업자등록번호': header.endUserTaxId || '',
+    '물품코드(규격)': item.spec || '',
+    '수량': item.qty ?? '',
+    'UOM': item.uom || '',
+    'EDI Code': item.edi || '',
+    'Source File': fileName,
+    'Page': pageNo
   };
-}
 
-function hasMeaningfulValue(r){
-  return clean(r['Material Desc']) ||
-         clean(r['Material Code']) ||
-         clean(r['Unit']) ||
-         String(r['Qty'] ?? '') ||
-         clean(r['Insurance Code']);
+  const reasons = [];
+
+  if(!r['공급자명']) reasons.push('공급자명 누락');
+  if(!r['공급자 사업자등록번호']) reasons.push('공급자 사업자등록번호 누락');
+  if(!r['납품처명']) reasons.push('납품처명 누락');
+  if(!r['납품처 사업자등록번호']) reasons.push('납품처 사업자등록번호 누락');
+  if(!r['물품코드(규격)']) reasons.push('물품코드/규격 누락');
+  if(!r['수량']) reasons.push('수량 누락');
+  if(!r['UOM']) reasons.push('UOM 누락');
+  if(!r['EDI Code']) reasons.push('EDI Code 누락');
+
+  r['Review Flag'] = reasons.length ? 'Y' : 'N';
+  r['Review Reason'] = reasons.join('; ');
+
+  return r;
 }
 
 const drop = document.getElementById('drop');
@@ -735,14 +600,18 @@ drop.addEventListener('dragleave', () => {
 drop.addEventListener('drop', e => {
   e.preventDefault();
   drop.classList.remove('over');
-  addFiles([...e.dataTransfer.files].filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')));
+  addFiles([...e.dataTransfer.files].filter(f =>
+    f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+  ));
 });
 
 fi.addEventListener('change', () => addFiles([...fi.files]));
 
 function addFiles(arr){
   arr.forEach(f => {
-    if(!files.find(x => x.name === f.name && x.size === f.size)) files.push(f);
+    if(!files.find(x => x.name === f.name && x.size === f.size)){
+      files.push(f);
+    }
   });
   renderFiles();
 }
@@ -769,7 +638,8 @@ function renderFiles(){
 
   el.classList.toggle('on', files.length > 0);
   document.getElementById('run').disabled = files.length === 0;
-  document.getElementById('meta1').textContent = files.length ? `${files.length}개 선택됨` : 'PDF · 여러 개 가능';
+  document.getElementById('meta1').textContent =
+    files.length ? `${files.length}개 선택됨` : 'PDF · 여러 개 가능';
 }
 
 function say(msg, cls=''){
@@ -785,17 +655,20 @@ function say(msg, cls=''){
 
 function prog(pct, label=''){
   document.getElementById('prog').classList.add('on');
+
   if(pct != null){
     document.getElementById('progFill').style.width = pct + '%';
     document.getElementById('progPct').textContent = pct + '%';
   }
+
   if(label) document.getElementById('progLbl').textContent = label;
 }
 
 function toggleRaw(){
   const r = document.getElementById('raw');
   const on = r.classList.toggle('on');
-  document.getElementById('rawBtn').textContent = on ? '원문 텍스트 숨기기' : '원문 텍스트 보기';
+  document.getElementById('rawBtn').textContent =
+    on ? '원문 텍스트 숨기기' : '원문 텍스트 보기';
 }
 
 async function runExtract(){
@@ -814,13 +687,13 @@ async function runExtract(){
   rawLines = [];
   docStats = [];
 
-  let totalPages = 0;
-  const loaded = [];
-
   try{
+    const loaded = [];
+    let totalPages = 0;
+
     for(const f of files){
       const pages = await readPdfPages(f);
-      loaded.push({f,pages});
+      loaded.push({file: f, pages});
       totalPages += pages.length;
     }
 
@@ -829,45 +702,47 @@ async function runExtract(){
 
     let done = 0;
 
-    for(const {f,pages} of loaded){
+    for(const pack of loaded){
+      const f = pack.file;
+      const pages = pack.pages;
+
       say(`\n📄 ${f.name} (${pages.length}페이지)`, 'hd');
 
       let carryHeader = blankHeader();
 
-      for(let pi=0; pi<pages.length; pi++){
-        const page = pages[pi];
-        prog(Math.round(done / Math.max(totalPages,1) * 95), `${f.name} — ${pi+1}/${pages.length}`);
+      for(const page of pages){
+        prog(Math.round(done / Math.max(totalPages, 1) * 95), `${f.name} — p${page.pageNo}`);
 
-        rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${pi+1}\n${'─'.repeat(54)}`);
-        rawLines.push(...page.lines);
+        rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${page.pageNo}\n${'─'.repeat(54)}`);
+        rawLines.push(...page.lines.map(x => x.text));
 
-        if(!page.lines.length){
-          done++;
-          continue;
+        carryHeader = extractHeader(page, carryHeader);
+
+        const items = parseItems(page);
+        const before = rows.length;
+
+        for(const item of items){
+          const outRow = buildOutputRow(carryHeader, item, f.name, page.pageNo);
+
+          if(
+            outRow['물품코드(규격)'] ||
+            outRow['수량'] ||
+            outRow['UOM'] ||
+            outRow['EDI Code']
+          ){
+            rows.push(outRow);
+          }
         }
 
-        carryHeader = extractHeaderFromLines(page.lines, f.name, carryHeader);
-        const items = parseItems(page);
-
-        const valid = items
-          .map(it => ({
-            ...carryHeader,
-            ...it,
-            'Source File': f.name
-          }))
-          .filter(hasMeaningfulValue)
-          .map(buildReview);
+        const added = rows.length - before;
 
         docStats.push({
           file: f.name,
-          page: pi+1,
-          itemCount: valid.length,
-          rowNos: items.map(x => x.rowNo).filter(Boolean)
+          page: page.pageNo,
+          itemCount: added
         });
 
-        rows.push(...valid);
-        say(`p${pi+1}: ${valid.length}개 품목`, valid.length ? 'ok' : 'warn');
-
+        say(`p${page.pageNo}: ${added}개 품목`, added ? 'ok' : 'warn');
         done++;
       }
     }
@@ -875,15 +750,17 @@ async function runExtract(){
     prog(100, '완료');
 
     const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
-    say(`\n완료 — 총 ${rows.length}개 품목`, 'ok');
+
+    say(`\n완료 — 총 ${rows.length}개 품목`, rows.length ? 'ok' : 'warn');
     if(flagged) say(`${flagged}개는 확인이 필요합니다`, 'warn');
-    if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트를 확인해 보세요.', 'warn');
+    if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트 보기에서 PDF 텍스트 구조를 확인하세요.', 'warn');
 
     document.getElementById('meta2').textContent = '완료';
     document.getElementById('raw').textContent = rawLines.join('\n');
     document.getElementById('rawBtn').style.display = 'block';
 
     renderResults(totalPages);
+
   } catch(err){
     console.error(err);
     say(`오류: ${err.message || err}`, 'err');
@@ -895,14 +772,14 @@ async function runExtract(){
 
 function renderVerification(totalPages){
   const pagesWithData = docStats.filter(d => d.itemCount > 0).length;
-  const failed = rows.length === 0 || pagesWithData === 0;
   const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
+  const failed = rows.length === 0;
 
   const head =
     `<div class="verify-head ${failed ? 'warn' : 'pass'}">
       <div class="verify-badge">${failed ? '!' : '✓'}</div>
       <div>
-        <div class="verify-title">${failed ? '검증 주의 — 추출 결과 확인 필요' : '검증 완료'}</div>
+        <div class="verify-title">${failed ? '추출 결과 없음' : '추출 완료'}</div>
         <div class="verify-sub">전체 ${totalPages}페이지 중 ${pagesWithData}페이지에서 품목을 읽었습니다.</div>
       </div>
     </div>`;
@@ -911,17 +788,8 @@ function renderVerification(totalPages){
 
   body +=
     `<div class="check">
-      <div class="check-mark ${pagesWithData ? 'ok' : 'no'}">${pagesWithData ? '✓' : '!'}</div>
-      <div>
-        <div class="check-name">페이지 판독</div>
-        <div class="check-detail">전체 ${totalPages}페이지 중 ${pagesWithData}페이지에서 품목 데이터가 추출되었습니다.</div>
-      </div>
-    </div>`;
-
-  body +=
-    `<div class="check">
       <div class="check-mark ${rows.length ? 'ok' : 'no'}">${rows.length ? '✓' : '!'}</div>
-      <div>
+      <div class="check-body">
         <div class="check-name">품목 추출</div>
         <div class="check-detail">총 ${rows.length}개 품목이 추출되었습니다.</div>
       </div>
@@ -930,9 +798,9 @@ function renderVerification(totalPages){
   body +=
     `<div class="check">
       <div class="check-mark ${flagged ? 'no' : 'ok'}">${flagged ? '!' : '✓'}</div>
-      <div>
+      <div class="check-body">
         <div class="check-name">필수값 확인</div>
-        <div class="check-detail">${flagged ? `${flagged}개 품목은 일부 필드 확인이 필요합니다.` : '필수 필드 누락이 없습니다.'}</div>
+        <div class="check-detail">${flagged ? `${flagged}개 품목은 일부 필드 확인이 필요합니다.` : '필수값 누락이 없습니다.'}</div>
       </div>
     </div>`;
 
@@ -945,7 +813,7 @@ function renderResults(totalPages){
   renderVerification(totalPages);
 
   const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
-  const cleanRows = rows.length - flagged;
+  const normal = rows.length - flagged;
 
   document.getElementById('stats').innerHTML =
     `<div class="stat">
@@ -954,7 +822,7 @@ function renderResults(totalPages){
     </div>
     <div class="stat ok">
       <div class="stat-l">정상</div>
-      <div class="stat-v">${cleanRows}<span class="u">개</span></div>
+      <div class="stat-v">${normal}<span class="u">개</span></div>
     </div>
     <div class="stat ${flagged ? 'warn' : 'ok'}">
       <div class="stat-l">확인 필요</div>
@@ -962,41 +830,48 @@ function renderResults(totalPages){
     </div>`;
 
   const C = [
-    ['Document No','mono'],
-    ['Date','mono'],
-    ['Dealer Name',''],
-    ['End User Name',''],
-    ['Material Desc',''],
-    ['Material Code','mono'],
-    ['Insurance Code','mono'],
+    ['공급자명',''],
+    ['공급자 사업자등록번호','mono'],
+    ['납품처명',''],
+    ['납품처 사업자등록번호','mono'],
+    ['물품코드(규격)','mono'],
+    ['수량','num'],
+    ['UOM','mono'],
     ['EDI Code','mono'],
-    ['Unit','mono'],
-    ['Qty','num'],
+    ['Source File',''],
+    ['Page','num'],
     ['Review Flag','']
   ];
 
-  const pv = rows.slice(0,300);
+  const preview = rows.slice(0, 300);
+
   document.getElementById('meta3').textContent = `${rows.length}개`;
   document.getElementById('tblNote').textContent =
-    rows.length > 300 ? `앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다` : `전체 ${rows.length}개`;
+    rows.length > 300
+      ? `앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다`
+      : `전체 ${rows.length}개`;
 
   let html = '<table><thead><tr>';
-  for(const [n] of C) html += `<th>${escapeHtml(n)}</th>`;
+
+  for(const [name] of C){
+    html += `<th>${escapeHtml(name)}</th>`;
+  }
+
   html += '</tr></thead><tbody>';
 
-  for(const r of pv){
+  for(const r of preview){
     const flag = r['Review Flag'] === 'Y';
     html += `<tr class="${flag ? 'flag' : ''}">`;
 
-    for(const [n,cls] of C){
-      const v = r[n] == null ? '' : String(r[n]);
+    for(const [name, cls] of C){
+      const value = r[name] == null ? '' : String(r[name]);
 
-      if(n === 'Review Flag'){
+      if(name === 'Review Flag'){
         html += flag
           ? `<td><span class="pill pill-wn" title="${escapeHtml(r['Review Reason'] || '')}">확인 필요</span></td>`
           : `<td><span class="pill pill-ok">정상</span></td>`;
       } else {
-        html += `<td class="${cls}${v ? '' : ' dim'}" title="${escapeHtml(v)}">${v ? escapeHtml(v) : '—'}</td>`;
+        html += `<td class="${cls}${value ? '' : ' dim'}" title="${escapeHtml(value)}">${value ? escapeHtml(value) : '—'}</td>`;
       }
     }
 
@@ -1007,7 +882,7 @@ function renderResults(totalPages){
 
   document.getElementById('tbl').innerHTML = html;
   document.getElementById('results').style.display = 'block';
-  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+  document.getElementById('results').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 function downloadXlsx(){
@@ -1015,39 +890,49 @@ function downloadXlsx(){
 
   const wb = XLSX.utils.book_new();
 
-  const makeSheet = data => XLSX.utils.json_to_sheet(
-    data.map(r => {
-      const o = {};
-      for(const c of OUTPUT_COLUMNS) o[c] = r[c] ?? '';
-      return o;
-    }),
-    {header: OUTPUT_COLUMNS}
-  );
+  const data = rows.map(r => {
+    const o = {};
+    for(const c of OUTPUT_COLUMNS){
+      o[c] = r[c] ?? '';
+    }
+    return o;
+  });
 
-  XLSX.utils.book_append_sheet(wb, makeSheet(rows), '전체');
+  const ws = XLSX.utils.json_to_sheet(data, {header: OUTPUT_COLUMNS});
+  XLSX.utils.book_append_sheet(wb, ws, '전체');
 
-  const endUsers = [...new Set(rows.map(r => r['End User Name'] || '미분류'))];
+  const endUsers = [...new Set(rows.map(r => r['납품처명'] || '미분류'))];
   const used = new Set(['전체']);
 
   for(const eu of endUsers){
-    let sn = String(eu || '미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31) || '미분류';
-    let base = sn;
+    const subset = rows.filter(r => (r['납품처명'] || '미분류') === eu);
+    let sheetName = String(eu || '미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31) || '미분류';
+
+    let base = sheetName;
     let n = 2;
 
-    while(used.has(sn)){
-      sn = base.slice(0,28) + '_' + n;
+    while(used.has(sheetName)){
+      sheetName = base.slice(0,28) + '_' + n;
       n++;
     }
 
-    used.add(sn);
-    XLSX.utils.book_append_sheet(
-      wb,
-      makeSheet(rows.filter(r => (r['End User Name'] || '미분류') === eu)),
-      sn
+    used.add(sheetName);
+
+    const ws2 = XLSX.utils.json_to_sheet(
+      subset.map(r => {
+        const o = {};
+        for(const c of OUTPUT_COLUMNS){
+          o[c] = r[c] ?? '';
+        }
+        return o;
+      }),
+      {header: OUTPUT_COLUMNS}
     );
+
+    XLSX.utils.book_append_sheet(wb, ws2, sheetName);
   }
 
-  XLSX.writeFile(wb, 'merged_receipts_extracted.xlsx');
+  XLSX.writeFile(wb, 'invoice_extracted.xlsx');
 }
 
 function resetAll(){
@@ -1072,5 +957,3 @@ function resetAll(){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 </script>
-</body>
-</html>
