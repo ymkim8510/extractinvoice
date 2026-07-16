@@ -21,63 +21,50 @@
     --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
-
+  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;min-height:100vh}
   .topbar{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);z-index:10}
-  .logo{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
-  .topbar-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .logo{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
+  .topbar-title{font-size:15px;font-weight:600}
   .topbar-badge{margin-left:auto;font-size:12px;color:var(--text-3);background:var(--bg-soft);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-weight:500}
-
-  .wrap{max-width:820px;margin:0 auto;padding:44px 24px 100px}
+  .wrap{max-width:900px;margin:0 auto;padding:44px 24px 100px}
   .hero{text-align:center;margin-bottom:40px}
-  .hero h1{font-size:32px;font-weight:600;letter-spacing:-.025em;line-height:1.25;margin-bottom:10px}
-  .hero p{font-size:15px;color:var(--text-2);max-width:44ch;margin:0 auto}
-
+  .hero h1{font-size:32px;font-weight:600;line-height:1.25;margin-bottom:10px}
+  .hero p{font-size:15px;color:var(--text-2);max-width:50ch;margin:0 auto}
   .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
   .card-h{display:flex;align-items:center;gap:9px;margin-bottom:16px}
-  .card-h h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
-  .card-h .n{width:22px;height:22px;border-radius:50%;background:var(--bg-sunken);color:var(--text-2);font-size:11px;font-weight:600;display:grid;place-items:center;flex-shrink:0}
+  .card-h h2{font-size:15px;font-weight:600}
+  .card-h .n{width:22px;height:22px;border-radius:50%;background:var(--bg-sunken);color:var(--text-2);font-size:11px;font-weight:600;display:grid;place-items:center}
   .card-h .meta{margin-left:auto;font-size:13px;color:var(--text-3)}
-
   .callout{display:flex;gap:10px;background:var(--bg-soft);border-radius:var(--radius);padding:12px 14px;font-size:13.5px;color:var(--text-2);line-height:1.6;margin-bottom:16px}
-  .callout .ico{flex-shrink:0;font-size:15px;line-height:1.4}
+  .callout.warn{background:var(--warn-bg);color:#7c4a10}
   .callout strong{color:var(--text);font-weight:600}
   .callout code{font-family:var(--mono);font-size:12.5px;background:var(--bg-sunken);padding:1px 5px;border-radius:4px}
-  .callout.warn{background:var(--warn-bg);color:#7c4a10}
-  .callout.warn strong{color:#5c360b}
-
   .drop{border:1.5px dashed var(--border-2);border-radius:var(--radius);background:var(--bg-soft);padding:40px 20px;text-align:center;cursor:pointer;transition:all .16s ease}
   .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-bg)}
-  .drop-ico{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;color:var(--text-3);transition:all .16s ease}
-  .drop:hover .drop-ico,.drop.over .drop-ico{color:var(--accent);border-color:var(--accent)}
+  .drop-ico{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;color:var(--text-3)}
   .drop-t{font-size:14.5px;font-weight:500;margin-bottom:3px}
   .drop-s{font-size:13px;color:var(--text-3)}
   #fi{display:none}
-
   .files{display:none;flex-direction:column;gap:8px;margin-top:14px}
   .files.on{display:flex}
   .file{display:flex;align-items:center;gap:11px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px}
-  .file-ico{width:28px;height:28px;flex-shrink:0;border-radius:6px;background:var(--err-bg);color:var(--err);display:grid;place-items:center;font-size:9px;font-weight:700}
+  .file-ico{width:28px;height:28px;border-radius:6px;background:var(--err-bg);color:var(--err);display:grid;place-items:center;font-size:9px;font-weight:700}
   .file-name{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .file-size{font-size:12px;color:var(--text-3);flex-shrink:0;font-family:var(--mono)}
-  .file-x{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;line-height:1;padding:2px 4px;border-radius:4px;flex-shrink:0}
+  .file-size{font-size:12px;color:var(--text-3);font-family:var(--mono)}
+  .file-x{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:2px 4px;border-radius:4px}
   .file-x:hover{color:var(--err);background:var(--err-bg)}
-
-  .btn{font-family:var(--font);font-size:14px;font-weight:500;padding:10px 18px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .14s ease}
+  .btn{font-family:var(--font);font-size:14px;font-weight:500;padding:10px 18px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
   .btn-p{background:var(--accent);color:#fff}
   .btn-p:hover:not(:disabled){background:var(--accent-h)}
   .btn-p:disabled{background:var(--bg-sunken);color:var(--text-3);cursor:not-allowed}
   .btn-s{background:var(--bg);color:var(--text);border-color:var(--border-2)}
-  .btn-s:hover{background:var(--bg-soft)}
   .btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
-
   .prog{display:none;margin-top:16px}
   .prog.on{display:block}
   .prog-bar{height:6px;background:var(--bg-sunken);border-radius:99px;overflow:hidden}
-  .prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .35s cubic-bezier(.4,0,.2,1)}
+  .prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .35s}
   .prog-lbl{font-size:13px;color:var(--text-2);margin-top:8px;display:flex;justify-content:space-between}
   .prog-pct{font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
-
   .console{display:none;margin-top:16px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.9;max-height:240px;overflow-y:auto;color:var(--text-2)}
   .console.on{display:block}
   .c-line{white-space:pre-wrap}
@@ -85,12 +72,22 @@
   .c-ok{color:var(--accent)}
   .c-warn{color:var(--warn)}
   .c-err{color:var(--err)}
-
+  .raw-btn{display:none;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:7px 0 0;font-family:var(--font)}
+  .raw{display:none;margin-top:10px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--text-2);max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+  .raw.on{display:block}
+  #results{display:none}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .stat-l{font-size:12.5px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+  .stat-v{font-size:28px;font-weight:600;line-height:1}
+  .stat-v .u{font-size:14px;color:var(--text-3);font-weight:400;margin-left:3px}
+  .stat.ok .stat-v{color:var(--accent)}
+  .stat.warn .stat-v{color:var(--warn)}
   .verify{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
   .verify-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
   .verify-head.pass{background:var(--accent-bg)}
   .verify-head.warn{background:var(--warn-bg)}
-  .verify-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;flex-shrink:0;color:#fff}
+  .verify-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff}
   .verify-head.pass .verify-badge{background:var(--accent)}
   .verify-head.warn .verify-badge{background:var(--warn)}
   .verify-title{font-size:14px;font-weight:600}
@@ -98,55 +95,25 @@
   .verify-body{padding:6px 16px 12px}
   .check{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--bg-sunken)}
   .check:last-child{border-bottom:none}
-  .check-mark{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+  .check-mark{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
   .check-mark.ok{background:var(--accent-bg);color:var(--accent)}
   .check-mark.no{background:var(--warn-bg);color:var(--warn)}
-  .check-mark.na{background:var(--bg-sunken);color:var(--text-3)}
-  .check-body{flex:1;min-width:0}
   .check-name{font-size:13.5px;font-weight:500}
-  .check-detail{font-size:12.5px;color:var(--text-2);margin-top:2px;line-height:1.55}
-  .check-detail .mono{font-family:var(--mono);font-size:12px}
-  .fieldbars{margin-top:8px;display:grid;gap:6px}
-  .fb{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:10px}
-  .fb-name{font-size:12px;color:var(--text-2);font-family:var(--mono)}
-  .fb-track{height:6px;background:var(--bg-sunken);border-radius:99px;overflow:hidden}
-  .fb-fill{height:100%;border-radius:99px}
-  .fb-pct{font-size:12px;font-family:var(--mono);color:var(--text-2);text-align:right}
-
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-  .stat{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-  .stat-l{font-size:12.5px;color:var(--text-2);margin-bottom:5px;font-weight:500}
-  .stat-v{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1}
-  .stat-v .u{font-size:14px;color:var(--text-3);font-weight:400;margin-left:3px}
-  .stat.ok .stat-v{color:var(--accent)}
-  .stat.warn .stat-v{color:var(--warn)}
-
+  .check-detail{font-size:12.5px;color:var(--text-2);margin-top:2px}
+  .tbl-note{font-size:12.5px;color:var(--text-3);margin-bottom:9px}
   .tbl-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
   .tbl-scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:980px}
+  table{width:100%;border-collapse:collapse;min-width:1050px}
   thead th{background:var(--bg-soft);font-size:12px;font-weight:600;color:var(--text-2);text-align:left;padding:10px 13px;white-space:nowrap;border-bottom:1px solid var(--border)}
-  tbody td{padding:9px 13px;font-size:13px;border-bottom:1px solid var(--border);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  tbody tr:last-child td{border-bottom:none}
-  tbody tr:hover td{background:var(--bg-soft)}
+  tbody td{padding:9px 13px;font-size:13px;border-bottom:1px solid var(--border);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   tbody tr.flag td{background:var(--warn-bg)}
-  tbody tr.flag:hover td{background:#fdf0dd}
   td.mono{font-family:var(--mono);font-size:12.5px}
   td.num{font-family:var(--mono);font-size:12.5px;text-align:right}
   td.dim{color:var(--text-3)}
-  .pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:99px}
+  .pill{display:inline-flex;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:99px}
   .pill-ok{background:var(--accent-bg);color:var(--accent)}
   .pill-wn{background:#fdeccd;color:var(--warn)}
-  .tbl-note{font-size:12.5px;color:var(--text-3);margin-bottom:9px}
-
-  .raw-btn{display:none;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:7px 0 0;font-family:var(--font)}
-  .raw-btn:hover{color:var(--text)}
-  .raw{display:none;margin-top:10px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--text-2);max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
-  .raw.on{display:block}
-
-  #results{display:none}
-  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-  @media (max-width:640px){.hero h1{font-size:26px}.stats{grid-template-columns:1fr}.wrap{padding:32px 16px 80px}.fb{grid-template-columns:104px 1fr 40px}}
+  @media (max-width:640px){.hero h1{font-size:26px}.stats{grid-template-columns:1fr}.wrap{padding:32px 16px 80px}}
 </style>
 </head>
 <body>
@@ -160,16 +127,19 @@
 <div class="wrap">
   <div class="hero">
     <h1>PDF를 엑셀 원장으로</h1>
-    <p>거래명세서 PDF를 올리면 공급자·납품처·품목을 읽고, 결과가 맞는지 자동으로 검증합니다.</p>
+    <p>거래명세서 PDF를 올리면 공급자·납품처·품목을 읽고, Excel 파일로 내려받을 수 있습니다.</p>
   </div>
 
   <div class="card">
     <div class="card-h"><span class="n">1</span><h2>파일 선택</h2><span class="meta" id="meta1">PDF · 여러 개 가능</span></div>
-    <div class="callout warn"><span class="ico">⚠️</span><div><strong>텍스트가 들어 있는 PDF</strong>만 읽을 수 있습니다. 스캔한 이미지 PDF는 품목이 <code>0</code>개로 나옵니다 — 그럴 땐 아래 원문 보기로 확인하세요.</div></div>
+    <div class="callout warn">
+      <span>⚠️</span>
+      <div><strong>텍스트 PDF</strong> 기준입니다. 스캔 이미지 PDF는 브라우저만으로는 OCR이 되지 않아 품목이 <code>0</code>개로 나올 수 있습니다.</div>
+    </div>
     <div class="drop" id="drop" role="button" tabindex="0"
          onclick="document.getElementById('fi').click()"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fi').click()}">
-      <div class="drop-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <div class="drop-ico">PDF</div>
       <p class="drop-t">PDF를 끌어다 놓거나 클릭해서 선택</p>
       <p class="drop-s">여러 파일을 한 번에 올릴 수 있어요</p>
     </div>
@@ -178,11 +148,8 @@
   </div>
 
   <div class="card">
-    <div class="card-h"><span class="n">2</span><h2>추출 &amp; 검증</h2><span class="meta" id="meta2">대기 중</span></div>
-    <button class="btn btn-p" id="run" disabled onclick="runExtract()">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      추출 시작
-    </button>
+    <div class="card-h"><span class="n">2</span><h2>추출 & 검증</h2><span class="meta" id="meta2">대기 중</span></div>
+    <button class="btn btn-p" id="run" disabled onclick="runExtract()">추출 시작</button>
     <div class="prog" id="prog">
       <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
       <div class="prog-lbl"><span id="progLbl"></span><span class="prog-pct" id="progPct">0%</span></div>
@@ -193,16 +160,13 @@
   </div>
 
   <div class="card" id="results">
-    <div class="card-h"><span class="n">3</span><h2>결과 &amp; 검증 리포트</h2><span class="meta" id="meta3"></span></div>
+    <div class="card-h"><span class="n">3</span><h2>결과 & 검증 리포트</h2><span class="meta" id="meta3"></span></div>
     <div class="verify" id="verify"></div>
     <div class="stats" id="stats"></div>
     <p class="tbl-note" id="tblNote"></p>
     <div class="tbl-wrap"><div class="tbl-scroll" id="tbl"></div></div>
     <div class="btn-row">
-      <button class="btn btn-p" onclick="downloadXlsx()">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        엑셀 다운로드
-      </button>
+      <button class="btn btn-p" onclick="downloadXlsx()">엑셀 다운로드</button>
       <button class="btn btn-s" onclick="resetAll()">새로 시작</button>
     </div>
   </div>
@@ -212,6 +176,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 'use strict';
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -220,391 +185,757 @@ const OUTPUT_COLUMNS = [
   'Document No','Date','Material Desc','Material Code','Unit','Qty',
   'EDI Code','Insurance Code','Source File','Review Flag','Review Reason'
 ];
-const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC']);
 
-let files = [], rows = [], rawLines = [];
+const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC','PACK']);
+const INSURANCE_RX = /^(비보험|[BM]\d{7,}|G\d{7,})$/;
+const HOSPITAL_CODE_RX = /^\d{5,8}$/;
+
+let files = [];
+let rows = [];
+let rawLines = [];
 let docStats = [];
 
-const digitsOnly       = s => (s||'').replace(/\D/g,'');
-const cleanCompanyName = s => (s||'').replace(/\s+/g,' ').trim();
-const normalizeDesc    = s => (s||'').replace(/\s+/g,' ').trim();
-const isEdiCode        = t => /^\d{2}[A-Z0-9]+$/.test((t||'').trim());
-const isInsuranceCode  = t => { const c=(t||'').trim(); return c==='비보험' || /^[BM]\d{7,}$/.test(c); };
-const isUnitToken      = t => VALID_UNITS.has((t||'').trim());
+const clean = s => String(s ?? '').replace(/\s+/g,' ').trim();
+const digitsOnly = s => String(s ?? '').replace(/\D/g,'');
+const isUnit = s => VALID_UNITS.has(clean(s));
+const isInsurance = s => INSURANCE_RX.test(clean(s));
+const isRowNo = s => /^\d{1,3}$/.test(clean(s));
+const isHospitalCode = s => HOSPITAL_CODE_RX.test(clean(s));
+
+function escapeHtml(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
 
 function extractBusinessIds(line){
-  const ids=[];
-  for(const m of (line.match(/\d[\d\s\-]+\d/g)||[])){
-    const d=digitsOnly(m);
-    if(d.length>=10) ids.push(d);
+  const ids = [];
+  for(const m of (String(line).match(/\d[\d\s\-]+\d/g) || [])){
+    const d = digitsOnly(m);
+    if(d.length >= 10) ids.push(d);
   }
   return ids;
 }
 
+function blankHeader(){
+  return {
+    'Dealer Name':'',
+    'Dealer TAX ID':'',
+    'End User Name':'',
+    'End User TAX ID':'',
+    'Document No':'',
+    'Date':''
+  };
+}
+
+function mergeHeader(base, add){
+  const out = {...base};
+  for(const k of Object.keys(out)){
+    if(!out[k] && add[k]) out[k] = add[k];
+  }
+  return out;
+}
+
+function extractHeaderFromLines(lines, filename, previousHeader = blankHeader()){
+  const h = blankHeader();
+
+  for(const lineRaw of lines){
+    const line = clean(lineRaw);
+    const compact = line.replace(/\s+/g,'');
+
+    const ids = extractBusinessIds(line);
+    if(ids.length){
+      if(!h['Dealer TAX ID']) h['Dealer TAX ID'] = ids[0];
+      if(ids.length > 1 && !h['End User TAX ID']) h['End User TAX ID'] = ids[1];
+    }
+
+    if(/거래병원|거\s*래\s*병\s*원/.test(compact)){
+      const m = line.match(/거\s*래\s*병\s*원\s*(.+)$/);
+      if(m && !h['End User Name']) h['End User Name'] = clean(m[1]);
+    }
+
+    if(line.includes('서울아산병원') && !h['End User Name']) {
+      h['End User Name'] = '서울아산병원';
+    }
+
+    if(line.includes('국립암') && !h['End User Name']) {
+      h['End User Name'] = line.includes('국립암센타') ? '국립암센타' : '국립암센터';
+    }
+
+    if(line.includes('주식회사 세원메디') && !h['Dealer Name']) {
+      h['Dealer Name'] = '주식회사 세원메디';
+    }
+
+    if(line.includes('(주)아산메디칼') && !h['Dealer Name']) {
+      h['Dealer Name'] = '(주)아산메디칼';
+    }
+
+    if((line.includes('상 호') || line.includes('상호') || compact.includes('상호')) && line.includes('성명')){
+      const rx = /상\s*호\s*(.*?)\s*성명/g;
+      const found = [];
+      let m;
+      while((m = rx.exec(line)) !== null){
+        const name = clean(m[1]);
+        if(name) found.push(name);
+      }
+      if(found[0] && !h['Dealer Name']) h['Dealer Name'] = found[0];
+      if(found[1] && !h['End User Name']) h['End User Name'] = found[1];
+    }
+
+    if(!h['Document No']){
+      const m1 = line.match(/세금계산서번호\s*([^\s]+)/);
+      if(m1) h['Document No'] = clean(m1[1]);
+
+      const m2 = line.match(/^\s*(\d+)\s*-\s*(\d+)\s+/);
+      if(m2) h['Document No'] = `${m2[1]}-${m2[2]}`;
+    }
+
+    if(!h['Date']){
+      const ymd = line.match(/(20\d{2})[-./년\s]*(\d{1,2})[-./월\s]*(\d{1,2})/);
+      if(ymd){
+        h['Date'] = `${ymd[1]}-${String(+ymd[2]).padStart(2,'0')}-${String(+ymd[3]).padStart(2,'0')}`;
+      }
+
+      const md = line.match(/(\d{1,2})월\s*(\d{1,2})일/);
+      if(md){
+        const fm = filename.match(/(20\d{6})/);
+        if(fm){
+          const y = fm[1].slice(0,4);
+          h['Date'] = `${y}-${String(+md[1]).padStart(2,'0')}-${String(+md[2]).padStart(2,'0')}`;
+        }
+      }
+
+      const ym = filename.match(/(20\d{2})(\d{2})/);
+      if(!h['Date'] && ym && line.includes('거래일자')){
+        h['Date'] = `${ym[1]}-${ym[2]}-`;
+      }
+    }
+  }
+
+  return mergeHeader(previousHeader, h);
+}
+
+function groupTextItems(items){
+  if(!items.length) return [];
+
+  const sorted = [...items].sort((a,b) => b.y - a.y || a.x - b.x);
+  const groups = [];
+
+  for(const it of sorted){
+    const tol = Math.max(2.5, it.fs * 0.45);
+    let g = groups.find(gr => Math.abs(gr.y - it.y) <= tol);
+    if(!g){
+      g = { y: it.y, items: [] };
+      groups.push(g);
+    }
+    g.items.push(it);
+    g.y = g.items.reduce((s,x) => s + x.y, 0) / g.items.length;
+  }
+
+  groups.sort((a,b) => b.y - a.y);
+  for(const g of groups){
+    g.items.sort((a,b) => a.x - b.x);
+    g.text = clean(g.items.map(x => x.str).join(' '));
+  }
+  return groups;
+}
+
 async function readPdfPages(file){
-  const ab  = await file.arrayBuffer();
+  const ab = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data:ab}).promise;
   const pages = [];
-  for(let p=1;p<=pdf.numPages;p++){
+
+  for(let p=1; p<=pdf.numPages; p++){
     const page = await pdf.getPage(p);
-    const tc   = await page.getTextContent();
-    const out=[];
-    const items=[];
+    const tc = await page.getTextContent();
+    const items = [];
+
     for(const it of tc.items){
-      if(!it.str) continue;
-      const x=it.transform[4], y=it.transform[5];
-      const fs=Math.max(Math.abs(it.transform[0]),Math.abs(it.transform[3]))||10;
-      const w=(it.width&&it.width>0)?it.width:fs*it.str.length*0.55;
-      items.push({x,y,str:it.str,w,fs});
+      const str = clean(it.str);
+      if(!str) continue;
+
+      const x = it.transform[4];
+      const y = it.transform[5];
+      const fs = Math.max(Math.abs(it.transform[0]), Math.abs(it.transform[3])) || 10;
+      const w = it.width && it.width > 0 ? it.width : fs * str.length * 0.55;
+
+      items.push({x,y,w,fs,str});
     }
-    if(items.length){
-      items.sort((a,b)=>b.y-a.y||a.x-b.x);
-      const groups=[];
-      for(const it of items){
-        const tol=it.fs*0.5;
-        let placed=false;
-        for(const g of groups){
-          if(Math.abs(g.refY-it.y)<=tol){
-            g.items.push(it);
-            g.refY=g.items.reduce((s,i)=>s+i.y,0)/g.items.length;
-            placed=true; break;
-          }
-        }
-        if(!placed) groups.push({refY:it.y,items:[it]});
-      }
-      groups.sort((a,b)=>b.refY-a.refY);
-      for(const g of groups){
-        g.items.sort((a,b)=>a.x-b.x);
-        let line='',prevEnd=null,prevFs=10;
-        for(const it of g.items){
-          if(prevEnd!==null){
-            const gap=it.x-prevEnd;
-            if(gap>Math.min(prevFs,it.fs)*0.25 && !line.endsWith(' ')) line+=' ';
-          }
-          line+=it.str; prevEnd=it.x+it.w; prevFs=it.fs;
-        }
-        const t=line.replace(/\s+/g,' ').trim();
-        if(t) out.push(t);
-      }
-    }
-    pages.push(out);
+
+    const groups = groupTextItems(items);
+    const lines = groups.map(g => g.text).filter(Boolean);
+    pages.push({pageNo:p, items, groups, lines});
   }
+
   return pages;
 }
 
-function extractHeader(lines,filename){
-  let supTax='',euTax='',supName='',euName='',docNo='',date='';
-  for(const line of lines){
-    if(line.includes('등록번호')){
-      const ids=extractBusinessIds(line);
-      if(ids.length){ supTax=supTax||ids[0]; if(ids.length>1) euTax=euTax||ids[1]; }
-    }
-    if((line.includes('상  호')||line.includes('상 호')||line.includes('상호')) && line.includes('성명')){
-      const rx=/상\s*호\s*(.*?)\s*성명/g; const found=[]; let m;
-      while((m=rx.exec(line))!==null) found.push(cleanCompanyName(m[1]));
-      if(found[0]&&!supName) supName=found[0];
-      if(found[1]&&!euName)  euName =found[1];
-    }
-    if(!date){
-      const dm=line.match(/(\d{1,2})월\s*(\d{1,2})일/);
-      if(dm){
-        const fm=filename.match(/(20\d{6})/);
-        if(fm){ const y=fm[1].slice(0,4); const mo=String(parseInt(dm[1],10)).padStart(2,'0'); const d=String(parseInt(dm[2],10)).padStart(2,'0'); date=`${y}-${mo}-${d}`; }
-      }
-    }
-    const dn=line.match(/^\s*(\d+)\s*-\s*(\d+)\s+/);
-    if(dn) docNo=`${dn[1]}-${dn[2]}`;
+function getCellTextByHeader(group, headerXs){
+  const result = {
+    no:'', hospitalCode:'', desc:'', spec:'', unit:'', qty:'', insurance:'', amount:'', remark:''
+  };
+
+  if(!headerXs || !Object.keys(headerXs).length) return result;
+
+  const order = Object.entries(headerXs).sort((a,b) => a[1] - b[1]);
+  const bounds = [];
+
+  for(let i=0; i<order.length; i++){
+    const left = i === 0 ? -Infinity : (order[i-1][1] + order[i][1]) / 2;
+    const right = i === order.length - 1 ? Infinity : (order[i][1] + order[i+1][1]) / 2;
+    bounds.push({key:order[i][0], left, right});
   }
-  return {'Dealer Name':supName,'Dealer TAX ID':String(supTax),'End User Name':euName,'End User TAX ID':String(euTax),'Document No':docNo,'Date':date};
+
+  for(const it of group.items){
+    const b = bounds.find(x => it.x >= x.left && it.x < x.right);
+    if(!b) continue;
+    result[b.key] = clean(result[b.key] + ' ' + it.str);
+  }
+
+  return result;
 }
 
-function extractTotals(lines){
-  let totalAmount = null;
-  const bigNums = [];
-  for(const line of lines){
-    const nums = (line.match(/\d{1,3}(?:,\d{3})+/g)||[]).map(s=>parseInt(s.replace(/,/g,''),10));
-    for(const n of nums) if(n>=1000) bigNums.push(n);
-    if(/합\s*계\s*액|합계금액/.test(line) && nums.length){
-      totalAmount = Math.max(...nums);
+function detectHeaderXs(groups){
+  for(const g of groups){
+    const compact = g.text.replace(/\s+/g,'');
+    const looksHeader =
+      compact.includes('번호') &&
+      (
+        compact.includes('물품코드') ||
+        compact.includes('품명') ||
+        compact.includes('규격')
+      );
+
+    if(!looksHeader) continue;
+
+    const xs = {};
+    for(const it of g.items){
+      const c = it.str.replace(/\s+/g,'');
+      if(c.includes('번호')) xs.no = it.x;
+      else if(c.includes('물품코드')) xs.hospitalCode = it.x;
+      else if(c.includes('품명')) xs.desc = it.x;
+      else if(c.includes('규격')) xs.spec = it.x;
+      else if(c.includes('단위')) xs.unit = it.x;
+      else if(c.includes('수량')) xs.qty = it.x;
+      else if(c.includes('단가')) xs.insurance = it.x;
+      else if(c.includes('금액')) xs.amount = it.x;
+      else if(c.includes('비고')) xs.remark = it.x;
     }
+
+    if(xs.no && (xs.hospitalCode || xs.desc)) return xs;
   }
-  if(totalAmount===null && bigNums.length){
-    totalAmount = Math.max(...bigNums);
-  }
-  return { totalAmount };
+  return null;
 }
 
-function splitDescSpecUnitQty(payload){
-  const cleaned=normalizeDesc(payload);
-  const m=cleaned.match(/^(.+?)\s+([A-Z]+)\s+(\d+)$/);
-  if(!m) return {desc:cleaned,code:'',unit:'',qty:''};
-  const body=m[1].trim(),unit=m[2].trim(),qty=m[3].trim();
-  if(!isUnitToken(unit)) return {desc:cleaned,code:'',unit:'',qty:''};
-  if(!body.includes(' ')) return {desc:cleaned,code:'',unit,qty};
-  const i=body.lastIndexOf(' ');
-  return {desc:normalizeDesc(body.slice(0,i)),code:body.slice(i+1).trim(),unit,qty};
+function normalizeParsedItem(item){
+  const desc = clean(item['Material Desc']);
+  const code = clean(item['Material Code']);
+  const unit = clean(item['Unit']).toUpperCase();
+  let qty = clean(item['Qty']);
+  qty = qty === '' ? '' : Number(String(qty).replace(/[^\d.-]/g,''));
+
+  let ins = clean(item['Insurance Code']);
+  const edi = clean(item['EDI Code']);
+
+  if(!ins && isInsurance(edi)) {
+    ins = edi;
+    item['EDI Code'] = '';
+  }
+
+  return {
+    ...item,
+    'Material Desc': desc,
+    'Material Code': code,
+    'Unit': unit,
+    'Qty': Number.isFinite(qty) ? qty : '',
+    'Insurance Code': ins
+  };
 }
-function splitRowGroup(g){
-  const m=g[0].match(/^\s*(\d{1,2})\s+(.+?)\s*$/);
-  if(!m) return {remark:'',payload:''};
-  const payload=normalizeDesc(m[2]);
-  if(!payload) return {remark:'',payload:''};
-  const sp=payload.indexOf(' ');
-  if(sp===-1) return isInsuranceCode(payload)?{remark:payload,payload:''}:{remark:'',payload};
-  const first=payload.slice(0,sp), rest=payload.slice(sp+1);
-  return isInsuranceCode(first)?{remark:first,payload:normalizeDesc(rest)}:{remark:'',payload};
-}
-function parseGroupPayload(g){
-  const sr=splitRowGroup(g); let remark=sr.remark; const fp=sr.payload;
-  let desc=normalizeDesc(fp),code='',unit='',qty='',edi='';
-  const p=splitDescSpecUnitQty(fp);
-  if(p.code&&p.unit&&p.qty){ desc=p.desc;code=p.code;unit=p.unit;qty=parseInt(p.qty,10); }
-  for(let i=1;i<g.length;i++){
-    const c=normalizeDesc(g[i]); if(!c) continue;
-    if(isEdiCode(c)){ edi=c; continue; }
-    const t=c.split(/\s+/); const last=t[t.length-1],prev=t[t.length-2];
-    if(t.length>=4 && /^\d+$/.test(last) && isUnitToken(prev)){
-      unit=prev; qty=parseInt(last,10);
-      if(isEdiCode(t[t.length-4])){ edi=t[t.length-4]; code=t[t.length-3]; } else { code=t[t.length-3]; }
+
+function parsePageByPosition(page){
+  const headerXs = detectHeaderXs(page.groups);
+  if(!headerXs) return [];
+
+  const out = [];
+  let current = null;
+  let started = false;
+
+  function finalize(){
+    if(!current) return;
+    const normalized = normalizeParsedItem(current);
+    if(
+      normalized['Material Desc'] ||
+      normalized['Material Code'] ||
+      normalized['Unit'] ||
+      String(normalized['Qty'] ?? '') ||
+      normalized['Insurance Code']
+    ){
+      out.push(normalized);
+    }
+    current = null;
+  }
+
+  for(const g of page.groups){
+    const text = clean(g.text);
+    const compact = text.replace(/\s+/g,'');
+
+    if(compact.includes('번호') && (compact.includes('품명') || compact.includes('물품코드'))){
+      started = true;
+      finalize();
       continue;
     }
-    if(t.length===3 && /^\d+$/.test(last) && isUnitToken(prev)){ code=t[0]; unit=t[1]; qty=parseInt(t[2],10); continue; }
-    const ep=splitDescSpecUnitQty(c);
-    if(ep.code&&ep.unit&&ep.qty){
-      if(!code) code=ep.code; if(!unit) unit=ep.unit; if(!qty) qty=parseInt(ep.qty,10);
-      if(desc===normalizeDesc(fp)) desc=ep.desc; continue;
+
+    if(!started) continue;
+    if(compact.includes('검수') || compact.includes('합계') && compact.includes('공급가액')) {
+      finalize();
+      break;
     }
-  }
-  if(!code||!unit||!qty){
-    const t=fp.split(/\s+/); const last=t[t.length-1],prev=t[t.length-2];
-    if(t.length>=3 && /^\d+$/.test(last) && isUnitToken(prev)){
-      unit=unit||prev; qty=qty||parseInt(last,10); code=code||t[t.length-3];
-      desc=normalizeDesc(t.slice(0,-3).join(' '));
-    }
-  }
-  if(code && remark===code && !isInsuranceCode(remark)) remark='';
-  return {'Material Desc':desc,'Material Code':code,'Unit':unit,'Qty':qty,'EDI Code':edi,'Insurance Code':remark};
-}
 
-function parseItemRows(lines){
-  const grouped={};
-  let cur=null,inTable=false;
-  for(const raw of lines){
-    const s=raw.trim(); if(!s) continue;
-    const compact=s.replace(/\s+/g,'');
-    if(compact.includes('번호')&&compact.includes('물품명')){ inTable=true;cur=null;continue; }
-    if(!inTable) continue;
-    if(compact.includes('***검수***')||s.includes('***검 수***')){ inTable=false;cur=null;continue; }
-    const rm=raw.match(/^\s*(\d{1,2})\s+(.+?)\s*$/);
-    if(rm){ cur=parseInt(rm[1],10); grouped[cur]=[s]; }
-    else if(cur!==null){ grouped[cur].push(s); }
-  }
-  const nos = Object.keys(grouped).map(Number).sort((a,b)=>a-b);
-  return nos.map(n=>({ rowNo:n, ...parseGroupPayload(grouped[n]) }));
-}
+    const cells = getCellTextByHeader(g, headerXs);
+    let rowNo = clean(cells.no);
 
-function buildReview(row){
-  const r=[];
-  const desc=String(row['Material Desc']||''),code=String(row['Material Code']||'');
-  const unit=String(row['Unit']||''),qty=row['Qty'],edi=String(row['EDI Code']||''),ins=String(row['Insurance Code']||'');
-  if(!row['Date']) r.push('Date missing');
-  if(!code) r.push('Material Code missing');
-  if(!unit) r.push('Unit missing');
-  if(qty===''||qty==null) r.push('Qty missing');
-  if(!ins) r.push('Insurance Code missing');
-  if(desc!==desc.trim()) r.push('Material Desc has surrounding spaces');
-  if(code!==code.trim()) r.push('Material Code has surrounding spaces');
-  if(edi!==edi.trim()) r.push('EDI Code has surrounding spaces');
-  if(desc.includes(' EA ')||desc.endsWith(' EA')||desc.includes(' BOX ')||desc.endsWith(' BOX')) r.push('Unit may still be inside Material Desc');
-  return {...row,'Review Flag':r.length?'Y':'N','Review Reason':r.join('; ')};
-}
-const hasMeaningfulValue = r =>
-     String(r['Material Desc']||'').trim()!==''
-  || String(r['Material Code']||'').trim()!==''
-  || String(r['Unit']||'').trim()!==''
-  || String(r['Qty']??'')!=='';
+    const sortedTexts = g.items.map(x => clean(x.str)).filter(Boolean);
 
-const drop=document.getElementById('drop'), fi=document.getElementById('fi');
-drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
-drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
-drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'));});
-fi.addEventListener('change',()=>addFiles([...fi.files]));
-function addFiles(arr){arr.forEach(f=>{if(!files.find(x=>x.name===f.name&&x.size===f.size))files.push(f);});renderFiles();}
-function removeFile(i){files.splice(i,1);renderFiles();}
-function renderFiles(){
-  const el=document.getElementById('files'); el.innerHTML='';
-  files.forEach((f,i)=>{
-    const d=document.createElement('div'); d.className='file';
-    d.innerHTML=`<span class="file-ico">PDF</span><span class="file-name">${f.name}</span><span class="file-size">${(f.size/1024).toFixed(0)} KB</span><button class="file-x" onclick="removeFile(${i})" aria-label="제거">✕</button>`;
-    el.appendChild(d);
-  });
-  el.classList.toggle('on',files.length>0);
-  document.getElementById('run').disabled=files.length===0;
-  document.getElementById('meta1').textContent=files.length?`${files.length}개 선택됨`:'PDF · 여러 개 가능';
-}
-function say(msg,cls=''){const c=document.getElementById('console');c.classList.add('on');const d=document.createElement('div');d.className='c-line'+(cls?' c-'+cls:'');d.textContent=msg;c.appendChild(d);c.scrollTop=c.scrollHeight;}
-function prog(pct,label=''){document.getElementById('prog').classList.add('on');if(pct!=null){document.getElementById('progFill').style.width=pct+'%';document.getElementById('progPct').textContent=pct+'%';}if(label)document.getElementById('progLbl').textContent=label;}
-function toggleRaw(){const r=document.getElementById('raw');const on=r.classList.toggle('on');document.getElementById('rawBtn').textContent=on?'원문 텍스트 숨기기':'원문 텍스트 보기';}
-
-async function runExtract(){
-  if(!files.length) return;
-  const btn=document.getElementById('run'); btn.disabled=true;
-  document.getElementById('console').innerHTML='';
-  document.getElementById('results').style.display='none';
-  document.getElementById('raw').textContent='';
-  document.getElementById('rawBtn').style.display='none';
-  document.getElementById('meta2').textContent='처리 중…';
-  rows=[]; rawLines=[]; docStats=[];
-
-  let totalPages=0;
-  const loaded=[];
-  for(const f of files){
-    const pages=await readPdfPages(f);
-    loaded.push({f,pages});
-    totalPages+=pages.length;
-  }
-
-  say(`${files.length}개 파일 · 총 ${totalPages}페이지 처리 시작`,'hd');
-  prog(0,'준비 중');
-  let done=0;
-
-  for(const {f,pages} of loaded){
-    say(`\n📄 ${f.name} (${pages.length}페이지)`,'hd');
-    for(let pi=0; pi<pages.length; pi++){
-      const lines = pages[pi];
-      prog(Math.round(done/totalPages*95), `${f.name} — ${pi+1}/${pages.length}`);
-      rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${pi+1}\n${'─'.repeat(54)}`);
-      rawLines.push(...lines);
-      if(!lines.filter(l=>l).length){ done++; continue; }
-
-      const h = extractHeader(lines, f.name);
-      const totals = extractTotals(lines);
-      const items  = parseItemRows(lines);
-      const valid = items
-        .map(it=>({ ...h, ...it, 'Source File':f.name }))
-        .filter(hasMeaningfulValue)
-        .map(buildReview);
-
-      if(h['Document No'] || valid.length){
-        docStats.push({
-          file: f.name, page: pi+1,
-          docNo: h['Document No'] || `(p${pi+1})`,
-          rowNos: items.map(it=>it.rowNo),
-          itemCount: valid.length,
-          totalAmount: totals.totalAmount,
-        });
-      }
-      for(const v of valid){ const {rowNo, ...clean}=v; rows.push(clean); }
-      done++;
-    }
-  }
-
-  prog(100,'완료');
-  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
-  say(`\n완료 — 총 ${rows.length}개 품목`,'ok');
-  if(flagged) say(`${flagged}개는 확인이 필요합니다`,'warn');
-  if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트를 확인해 보세요.','warn');
-
-  document.getElementById('meta2').textContent='완료';
-  document.getElementById('raw').textContent=rawLines.join('\n');
-  document.getElementById('rawBtn').style.display='block';
-
-  renderResults(totalPages);
-  btn.disabled=false;
-}
-
-function buildVerification(totalPages){
-  const checks = [];
-  const pagesWithData = docStats.length;
-  checks.push({
-    name: '페이지 판독',
-    status: pagesWithData === totalPages ? 'ok' : (pagesWithData === 0 ? 'no' : 'no'),
-    detail: `전체 ${totalPages}페이지 중 <span class="mono">${pagesWithData}</span>페이지에서 데이터를 읽었습니다.`
-          + (pagesWithData < totalPages ? ` 나머지 ${totalPages-pagesWithData}페이지는 빈 페이지이거나 텍스트가 없습니다.` : '')
-  });
-
-  const withDoc = docStats.filter(d=>/^\d/.test(d.docNo)).length;
-  checks.push({
-    name: '문서번호 인식',
-    status: withDoc === docStats.length && docStats.length>0 ? 'ok' : (withDoc===0 ? 'no' : 'no'),
-    detail: docStats.length
-      ? `데이터가 있는 ${docStats.length}페이지 중 <span class="mono">${withDoc}</span>페이지에서 문서번호(예: 141641-2)를 찾았습니다.`
-      : '문서번호를 찾지 못했습니다.'
-  });
-
-  const gaps = [];
-  for(const d of docStats){
-    const ns = d.rowNos;
-    if(ns.length >= 2){
-      for(let i=1;i<ns.length;i++){
-        if(ns[i] - ns[i-1] > 1){
-          gaps.push(`${d.docNo}: ${ns[i-1]}→${ns[i]} 사이 ${ns[i]-ns[i-1]-1}개 비었을 수 있음`);
+    let rowNoIndex = -1;
+    for(let i=0; i<sortedTexts.length; i++){
+      if(isRowNo(sortedTexts[i])){
+        if(sortedTexts[i+1] && isHospitalCode(sortedTexts[i+1])){
+          rowNoIndex = i;
+          break;
         }
       }
     }
+
+    if(!isRowNo(rowNo) && rowNoIndex >= 0){
+      rowNo = sortedTexts[rowNoIndex];
+    }
+
+    if(isRowNo(rowNo)){
+      finalize();
+
+      let hospitalCode = clean(cells.hospitalCode);
+      let desc = clean(cells.desc);
+      let spec = clean(cells.spec);
+      let unit = clean(cells.unit);
+      let qty = clean(cells.qty);
+      let insurance = clean(cells.insurance || cells.remark);
+
+      if(rowNoIndex >= 0){
+        const t = sortedTexts.slice(rowNoIndex + 1);
+        if(!isHospitalCode(hospitalCode) && isHospitalCode(t[0])) hospitalCode = t[0];
+
+        if(!desc && t[1]) desc = t[1];
+        if(!spec && t[2]) spec = t[2];
+        if(!unit && t[3]) unit = t[3];
+        if(!qty && t[4]) qty = t[4];
+        if(!insurance && t[5]) insurance = t[5];
+
+        for(const z of t){
+          if(!insurance && isInsurance(z)) insurance = z;
+        }
+      }
+
+      if(!isUnit(unit)){
+        const unitCandidate = sortedTexts.find(isUnit);
+        if(unitCandidate) unit = unitCandidate;
+      }
+
+      if(!qty){
+        const unitIdx = sortedTexts.findIndex(isUnit);
+        if(unitIdx >= 0 && sortedTexts[unitIdx + 1] && /^\d+$/.test(sortedTexts[unitIdx + 1])){
+          qty = sortedTexts[unitIdx + 1];
+        }
+      }
+
+      current = {
+        rowNo: Number(rowNo),
+        'Material Desc': desc,
+        'Material Code': spec || hospitalCode,
+        'Unit': unit,
+        'Qty': qty,
+        'EDI Code': hospitalCode,
+        'Insurance Code': insurance
+      };
+
+      continue;
+    }
+
+    if(current){
+      const cells2 = getCellTextByHeader(g, headerXs);
+
+      if(cells2.desc) {
+        current['Material Desc'] = clean(current['Material Desc'] + ' ' + cells2.desc);
+      }
+
+      if(cells2.spec) {
+        current['Material Code'] = clean(current['Material Code'] + ' ' + cells2.spec);
+      }
+
+      if(cells2.unit && !current['Unit']) current['Unit'] = cells2.unit;
+      if(cells2.qty && !current['Qty']) current['Qty'] = cells2.qty;
+
+      const ins = clean(cells2.insurance || cells2.remark);
+      if(ins && isInsurance(ins) && !current['Insurance Code']) current['Insurance Code'] = ins;
+
+      for(const z of sortedTexts){
+        if(isInsurance(z) && !current['Insurance Code']) current['Insurance Code'] = z;
+      }
+    }
   }
-  checks.push({
-    name: '행 번호 연속성',
-    status: gaps.length===0 ? 'ok' : 'no',
-    detail: gaps.length===0
-      ? '품목 행 번호가 연속적입니다. 중간에 놓친 행이 없습니다.'
-      : `번호가 건너뛴 곳이 있습니다 — 놓친 행 가능성:<br>` +
-        gaps.slice(0,5).map(g=>`· <span class="mono">${g}</span>`).join('<br>') +
-        (gaps.length>5 ? `<br>· 외 ${gaps.length-5}건` : '')
+
+  finalize();
+  return out;
+}
+
+function splitDescSpecUnitQty(payload){
+  const cleaned = clean(payload);
+  const m = cleaned.match(/^(.+?)\s+([A-Z]+)\s+(\d+)$/);
+  if(!m) return {desc:cleaned, code:'', unit:'', qty:''};
+
+  const unit = m[2].trim().toUpperCase();
+  const qty = m[3].trim();
+  if(!isUnit(unit)) return {desc:cleaned, code:'', unit:'', qty:''};
+
+  const body = m[1].trim();
+  const i = body.lastIndexOf(' ');
+  if(i < 0) return {desc:body, code:'', unit, qty};
+
+  return {
+    desc: clean(body.slice(0,i)),
+    code: clean(body.slice(i+1)),
+    unit,
+    qty
+  };
+}
+
+function parsePageByLines(page){
+  const grouped = {};
+  let cur = null;
+  let inTable = false;
+
+  for(const raw of page.lines){
+    const s = clean(raw);
+    if(!s) continue;
+
+    const compact = s.replace(/\s+/g,'');
+
+    if(compact.includes('번호') && (compact.includes('물품명') || compact.includes('품명') || compact.includes('EDI코드'))){
+      inTable = true;
+      cur = null;
+      continue;
+    }
+
+    if(!inTable) continue;
+
+    if(compact.includes('검수') || compact.includes('담당부서장')){
+      inTable = false;
+      cur = null;
+      continue;
+    }
+
+    const rm = s.match(/^\s*(\d{1,3})\s+(.+?)\s*$/);
+    if(rm){
+      cur = Number(rm[1]);
+      grouped[cur] = [s];
+    } else if(cur !== null) {
+      grouped[cur].push(s);
+    }
+  }
+
+  const out = [];
+  const nos = Object.keys(grouped).map(Number).sort((a,b) => a-b);
+
+  for(const n of nos){
+    const g = grouped[n];
+    const first = clean(g[0].replace(/^\d{1,3}\s+/, ''));
+    let desc = first;
+    let code = '';
+    let unit = '';
+    let qty = '';
+    let edi = '';
+    let ins = '';
+
+    for(const part of g){
+      const tokens = clean(part).split(/\s+/);
+      for(const t of tokens){
+        if(isInsurance(t)) ins = t;
+      }
+
+      const p = splitDescSpecUnitQty(clean(part.replace(/^\d{1,3}\s+/, '')));
+      if(p.unit && p.qty){
+        desc = p.desc || desc;
+        code = p.code || code;
+        unit = p.unit;
+        qty = p.qty;
+      }
+    }
+
+    out.push(normalizeParsedItem({
+      rowNo:n,
+      'Material Desc':desc,
+      'Material Code':code,
+      'Unit':unit,
+      'Qty':qty,
+      'EDI Code':edi,
+      'Insurance Code':ins
+    }));
+  }
+
+  return out;
+}
+
+function parseItems(page){
+  const byPosition = parsePageByPosition(page);
+  if(byPosition.length) return byPosition;
+
+  return parsePageByLines(page);
+}
+
+function buildReview(row){
+  const r = [];
+
+  if(!clean(row['Date'])) r.push('Date missing');
+  if(!clean(row['Dealer Name'])) r.push('Dealer Name missing');
+  if(!clean(row['End User Name'])) r.push('End User Name missing');
+  if(!clean(row['Material Desc'])) r.push('Material Desc missing');
+  if(!clean(row['Material Code'])) r.push('Material Code missing');
+  if(!clean(row['Unit'])) r.push('Unit missing');
+  if(row['Qty'] === '' || row['Qty'] == null) r.push('Qty missing');
+  if(!clean(row['Insurance Code'])) r.push('Insurance Code missing');
+
+  return {
+    ...row,
+    'Review Flag': r.length ? 'Y' : 'N',
+    'Review Reason': r.join('; ')
+  };
+}
+
+function hasMeaningfulValue(r){
+  return clean(r['Material Desc']) ||
+         clean(r['Material Code']) ||
+         clean(r['Unit']) ||
+         String(r['Qty'] ?? '') ||
+         clean(r['Insurance Code']);
+}
+
+const drop = document.getElementById('drop');
+const fi = document.getElementById('fi');
+
+drop.addEventListener('dragover', e => {
+  e.preventDefault();
+  drop.classList.add('over');
+});
+
+drop.addEventListener('dragleave', () => {
+  drop.classList.remove('over');
+});
+
+drop.addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('over');
+  addFiles([...e.dataTransfer.files].filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')));
+});
+
+fi.addEventListener('change', () => addFiles([...fi.files]));
+
+function addFiles(arr){
+  arr.forEach(f => {
+    if(!files.find(x => x.name === f.name && x.size === f.size)) files.push(f);
+  });
+  renderFiles();
+}
+
+function removeFile(i){
+  files.splice(i,1);
+  renderFiles();
+}
+
+function renderFiles(){
+  const el = document.getElementById('files');
+  el.innerHTML = '';
+
+  files.forEach((f,i) => {
+    const d = document.createElement('div');
+    d.className = 'file';
+    d.innerHTML =
+      `<span class="file-ico">PDF</span>
+       <span class="file-name">${escapeHtml(f.name)}</span>
+       <span class="file-size">${(f.size/1024).toFixed(0)} KB</span>
+       <button class="file-x" onclick="removeFile(${i})" aria-label="제거">✕</button>`;
+    el.appendChild(d);
   });
 
-  const contradictions = docStats.filter(d => d.totalAmount && d.totalAmount>0 && d.itemCount===0);
-  const withTotal = docStats.filter(d=>d.totalAmount && d.totalAmount>0).length;
-  checks.push({
-    name: '합계액 교차검증',
-    status: contradictions.length===0 ? (withTotal>0?'ok':'na') : 'no',
-    detail: withTotal===0
-      ? '합계금액 라인을 찾지 못해 이 검사는 건너뜁니다.'
-      : contradictions.length===0
-        ? `합계금액이 있는 ${withTotal}페이지 모두 품목이 정상 추출되었습니다. (금액이 있는데 품목이 0인 모순 없음)`
-        : `합계금액은 있으나 품목이 0개인 페이지 ${contradictions.length}건 — 표 인식 실패 의심:<br>` +
-          contradictions.slice(0,5).map(d=>`· <span class="mono">${d.docNo}</span> (합계 ${d.totalAmount.toLocaleString()})`).join('<br>')
-  });
+  el.classList.toggle('on', files.length > 0);
+  document.getElementById('run').disabled = files.length === 0;
+  document.getElementById('meta1').textContent = files.length ? `${files.length}개 선택됨` : 'PDF · 여러 개 가능';
+}
 
-  const fieldCheck = ['Document No','Date','Dealer Name','End User Name','Material Desc','Material Code','Unit','Qty','Insurance Code'];
-  const fieldRates = fieldCheck.map(col=>{
-    const filled = rows.filter(r=>String(r[col]??'').trim()!=='').length;
-    const pct = rows.length ? Math.round(filled/rows.length*100) : 0;
-    return { col, pct };
-  });
+function say(msg, cls=''){
+  const c = document.getElementById('console');
+  c.classList.add('on');
 
-  return { checks, fieldRates };
+  const d = document.createElement('div');
+  d.className = 'c-line' + (cls ? ' c-' + cls : '');
+  d.textContent = msg;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+function prog(pct, label=''){
+  document.getElementById('prog').classList.add('on');
+  if(pct != null){
+    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progPct').textContent = pct + '%';
+  }
+  if(label) document.getElementById('progLbl').textContent = label;
+}
+
+function toggleRaw(){
+  const r = document.getElementById('raw');
+  const on = r.classList.toggle('on');
+  document.getElementById('rawBtn').textContent = on ? '원문 텍스트 숨기기' : '원문 텍스트 보기';
+}
+
+async function runExtract(){
+  if(!files.length) return;
+
+  const btn = document.getElementById('run');
+  btn.disabled = true;
+
+  document.getElementById('console').innerHTML = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('raw').textContent = '';
+  document.getElementById('rawBtn').style.display = 'none';
+  document.getElementById('meta2').textContent = '처리 중…';
+
+  rows = [];
+  rawLines = [];
+  docStats = [];
+
+  let totalPages = 0;
+  const loaded = [];
+
+  try{
+    for(const f of files){
+      const pages = await readPdfPages(f);
+      loaded.push({f,pages});
+      totalPages += pages.length;
+    }
+
+    say(`${files.length}개 파일 · 총 ${totalPages}페이지 처리 시작`, 'hd');
+    prog(0, '준비 중');
+
+    let done = 0;
+
+    for(const {f,pages} of loaded){
+      say(`\n📄 ${f.name} (${pages.length}페이지)`, 'hd');
+
+      let carryHeader = blankHeader();
+
+      for(let pi=0; pi<pages.length; pi++){
+        const page = pages[pi];
+        prog(Math.round(done / Math.max(totalPages,1) * 95), `${f.name} — ${pi+1}/${pages.length}`);
+
+        rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${pi+1}\n${'─'.repeat(54)}`);
+        rawLines.push(...page.lines);
+
+        if(!page.lines.length){
+          done++;
+          continue;
+        }
+
+        carryHeader = extractHeaderFromLines(page.lines, f.name, carryHeader);
+        const items = parseItems(page);
+
+        const valid = items
+          .map(it => ({
+            ...carryHeader,
+            ...it,
+            'Source File': f.name
+          }))
+          .filter(hasMeaningfulValue)
+          .map(buildReview);
+
+        docStats.push({
+          file: f.name,
+          page: pi+1,
+          itemCount: valid.length,
+          rowNos: items.map(x => x.rowNo).filter(Boolean)
+        });
+
+        rows.push(...valid);
+        say(`p${pi+1}: ${valid.length}개 품목`, valid.length ? 'ok' : 'warn');
+
+        done++;
+      }
+    }
+
+    prog(100, '완료');
+
+    const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
+    say(`\n완료 — 총 ${rows.length}개 품목`, 'ok');
+    if(flagged) say(`${flagged}개는 확인이 필요합니다`, 'warn');
+    if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트를 확인해 보세요.', 'warn');
+
+    document.getElementById('meta2').textContent = '완료';
+    document.getElementById('raw').textContent = rawLines.join('\n');
+    document.getElementById('rawBtn').style.display = 'block';
+
+    renderResults(totalPages);
+  } catch(err){
+    console.error(err);
+    say(`오류: ${err.message || err}`, 'err');
+    document.getElementById('meta2').textContent = '오류';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function renderVerification(totalPages){
-  const { checks, fieldRates } = buildVerification(totalPages);
-  const failed = checks.filter(c=>c.status==='no').length;
-  const allPass = failed===0;
+  const pagesWithData = docStats.filter(d => d.itemCount > 0).length;
+  const failed = rows.length === 0 || pagesWithData === 0;
+  const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
 
-  const head = `
-    <div class="verify-head ${allPass?'pass':'warn'}">
-      <div class="verify-badge">${allPass?'✓':'!'}</div>
+  const head =
+    `<div class="verify-head ${failed ? 'warn' : 'pass'}">
+      <div class="verify-badge">${failed ? '!' : '✓'}</div>
       <div>
-        <div class="verify-title">${allPass?'검증 통과 — 눈으로 대조하지 않아도 됩니다':`검증 주의 — ${failed}개 항목 확인 필요`}</div>
-        <div class="verify-sub">${allPass?'아래 자동 검사를 모두 통과했습니다.':'아래에서 주의 표시된 항목을 확인하세요.'}</div>
+        <div class="verify-title">${failed ? '검증 주의 — 추출 결과 확인 필요' : '검증 완료'}</div>
+        <div class="verify-sub">전체 ${totalPages}페이지 중 ${pagesWithData}페이지에서 품목을 읽었습니다.</div>
       </div>
     </div>`;
 
   let body = '<div class="verify-body">';
-  for(const c of checks){
-    const mk = c.status==='ok' ? '<div class="check-mark ok">✓</div>'
-             : c.status==='na' ? '<div class="check-mark na">–</div>'
-             :                    '<div class="check-mark no">!</div>';
-    body += `<div class="check">${mk}<div class="check-body"><div class="check-name">${c.name}</div><div class="check-detail">${c.detail}</div></div></div>`;
-  }
 
-  let bars = '<div class="fieldbars">';
-  for(const f of fieldRates){
-    const color = f.pct>=90 ? 'var(--accent)' : f.pct>=60 ? 'var(--warn)' : 'var(--err)';
-    bars += `<div class="fb"><span class="fb-name">${f.col}</span><div class="fb-track"><div class="fb-fill" style="width:${f.pct}%;background:${color}"></div></div><span class="fb-pct">${f.pct}%</span></div>`;
-  }
-  bars += '</div>';
-  body += `<div class="check"><div class="check-mark ${fieldRates.every(f=>f.pct>=60)?'ok':'no'}">${fieldRates.every(f=>f.pct>=60)?'✓':'!'}</div><div class="check-body"><div class="check-name">필드별 추출률</div><div class="check-detail">각 컬럼이 몇 %나 채워졌는지입니다. 낮은 항목은 파싱이 약한 부분입니다.</div>${bars}</div></div>`;
+  body +=
+    `<div class="check">
+      <div class="check-mark ${pagesWithData ? 'ok' : 'no'}">${pagesWithData ? '✓' : '!'}</div>
+      <div>
+        <div class="check-name">페이지 판독</div>
+        <div class="check-detail">전체 ${totalPages}페이지 중 ${pagesWithData}페이지에서 품목 데이터가 추출되었습니다.</div>
+      </div>
+    </div>`;
+
+  body +=
+    `<div class="check">
+      <div class="check-mark ${rows.length ? 'ok' : 'no'}">${rows.length ? '✓' : '!'}</div>
+      <div>
+        <div class="check-name">품목 추출</div>
+        <div class="check-detail">총 ${rows.length}개 품목이 추출되었습니다.</div>
+      </div>
+    </div>`;
+
+  body +=
+    `<div class="check">
+      <div class="check-mark ${flagged ? 'no' : 'ok'}">${flagged ? '!' : '✓'}</div>
+      <div>
+        <div class="check-name">필수값 확인</div>
+        <div class="check-detail">${flagged ? `${flagged}개 품목은 일부 필드 확인이 필요합니다.` : '필수 필드 누락이 없습니다.'}</div>
+      </div>
+    </div>`;
+
   body += '</div>';
 
   document.getElementById('verify').innerHTML = head + body;
@@ -612,67 +943,133 @@ function renderVerification(totalPages){
 
 function renderResults(totalPages){
   renderVerification(totalPages);
-  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
-  const clean=rows.length-flagged;
-  document.getElementById('stats').innerHTML=`
-    <div class="stat"><div class="stat-l">추출된 품목</div><div class="stat-v">${rows.length}<span class="u">개</span></div></div>
-    <div class="stat ok"><div class="stat-l">정상</div><div class="stat-v">${clean}<span class="u">개</span></div></div>
-    <div class="stat ${flagged?'warn':'ok'}"><div class="stat-l">확인 필요</div><div class="stat-v">${flagged}<span class="u">개</span></div></div>`;
 
-  const C=[['Document No','mono'],['Date','mono'],['Dealer Name',''],['End User Name',''],['Material Desc',''],['Material Code','mono'],['Insurance Code','mono'],['EDI Code','mono'],['Unit','mono'],['Qty','num'],['Review Flag','']];
-  const pv=rows.slice(0,300);
-  document.getElementById('meta3').textContent=`${rows.length}개`;
-  document.getElementById('tblNote').textContent = rows.length>300?`앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다`:`전체 ${rows.length}개`;
+  const flagged = rows.filter(r => r['Review Flag'] === 'Y').length;
+  const cleanRows = rows.length - flagged;
 
-  let h='<table><thead><tr>';
-  for(const [n] of C) h+=`<th>${n}</th>`;
-  h+='</tr></thead><tbody>';
+  document.getElementById('stats').innerHTML =
+    `<div class="stat">
+      <div class="stat-l">추출된 품목</div>
+      <div class="stat-v">${rows.length}<span class="u">개</span></div>
+    </div>
+    <div class="stat ok">
+      <div class="stat-l">정상</div>
+      <div class="stat-v">${cleanRows}<span class="u">개</span></div>
+    </div>
+    <div class="stat ${flagged ? 'warn' : 'ok'}">
+      <div class="stat-l">확인 필요</div>
+      <div class="stat-v">${flagged}<span class="u">개</span></div>
+    </div>`;
+
+  const C = [
+    ['Document No','mono'],
+    ['Date','mono'],
+    ['Dealer Name',''],
+    ['End User Name',''],
+    ['Material Desc',''],
+    ['Material Code','mono'],
+    ['Insurance Code','mono'],
+    ['EDI Code','mono'],
+    ['Unit','mono'],
+    ['Qty','num'],
+    ['Review Flag','']
+  ];
+
+  const pv = rows.slice(0,300);
+  document.getElementById('meta3').textContent = `${rows.length}개`;
+  document.getElementById('tblNote').textContent =
+    rows.length > 300 ? `앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다` : `전체 ${rows.length}개`;
+
+  let html = '<table><thead><tr>';
+  for(const [n] of C) html += `<th>${escapeHtml(n)}</th>`;
+  html += '</tr></thead><tbody>';
+
   for(const r of pv){
-    const flag=r['Review Flag']==='Y';
-    h+=`<tr class="${flag?'flag':''}">`;
+    const flag = r['Review Flag'] === 'Y';
+    html += `<tr class="${flag ? 'flag' : ''}">`;
+
     for(const [n,cls] of C){
-      const v=r[n]==null?'':String(r[n]);
-      if(n==='Review Flag'){
-        h+= flag?`<td><span class="pill pill-wn" title="${(r['Review Reason']||'').replace(/"/g,'&quot;')}">확인 필요</span></td>`:`<td><span class="pill pill-ok">정상</span></td>`;
+      const v = r[n] == null ? '' : String(r[n]);
+
+      if(n === 'Review Flag'){
+        html += flag
+          ? `<td><span class="pill pill-wn" title="${escapeHtml(r['Review Reason'] || '')}">확인 필요</span></td>`
+          : `<td><span class="pill pill-ok">정상</span></td>`;
       } else {
-        h+=`<td class="${cls}${v?'':' dim'}" title="${v.replace(/"/g,'&quot;')}">${v||'—'}</td>`;
+        html += `<td class="${cls}${v ? '' : ' dim'}" title="${escapeHtml(v)}">${v ? escapeHtml(v) : '—'}</td>`;
       }
     }
-    h+='</tr>';
+
+    html += '</tr>';
   }
-  h+='</tbody></table>';
-  document.getElementById('tbl').innerHTML=h;
-  document.getElementById('results').style.display='block';
-  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+
+  html += '</tbody></table>';
+
+  document.getElementById('tbl').innerHTML = html;
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function downloadXlsx(){
   if(!rows.length) return;
-  const wb=XLSX.utils.book_new();
-  const sheet=data=>XLSX.utils.json_to_sheet(data.map(r=>{const o={};for(const c of OUTPUT_COLUMNS)o[c]=r[c]??'';return o;}),{header:OUTPUT_COLUMNS});
-  XLSX.utils.book_append_sheet(wb,sheet(rows),'전체');
-  const eus=[...new Set(rows.map(r=>r['End User Name']||'미분류'))];
-  const used=new Set(['전체']);
-  for(const eu of eus){
-    let sn=(eu||'미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31)||'미분류';
-    let base=sn,n=2; while(used.has(sn)){sn=base.slice(0,28)+'_'+n;n++;} used.add(sn);
-    XLSX.utils.book_append_sheet(wb,sheet(rows.filter(r=>(r['End User Name']||'미분류')===eu)),sn);
+
+  const wb = XLSX.utils.book_new();
+
+  const makeSheet = data => XLSX.utils.json_to_sheet(
+    data.map(r => {
+      const o = {};
+      for(const c of OUTPUT_COLUMNS) o[c] = r[c] ?? '';
+      return o;
+    }),
+    {header: OUTPUT_COLUMNS}
+  );
+
+  XLSX.utils.book_append_sheet(wb, makeSheet(rows), '전체');
+
+  const endUsers = [...new Set(rows.map(r => r['End User Name'] || '미분류'))];
+  const used = new Set(['전체']);
+
+  for(const eu of endUsers){
+    let sn = String(eu || '미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31) || '미분류';
+    let base = sn;
+    let n = 2;
+
+    while(used.has(sn)){
+      sn = base.slice(0,28) + '_' + n;
+      n++;
+    }
+
+    used.add(sn);
+    XLSX.utils.book_append_sheet(
+      wb,
+      makeSheet(rows.filter(r => (r['End User Name'] || '미분류') === eu)),
+      sn
+    );
   }
-  XLSX.writeFile(wb,'merged_receipts_extracted.xlsx');
+
+  XLSX.writeFile(wb, 'merged_receipts_extracted.xlsx');
 }
 
 function resetAll(){
-  files=[];rows=[];rawLines=[];docStats=[];
-  fi.value='';
+  files = [];
+  rows = [];
+  rawLines = [];
+  docStats = [];
+
+  fi.value = '';
   renderFiles();
-  document.getElementById('console').innerHTML='';
+
+  document.getElementById('console').innerHTML = '';
   document.getElementById('console').classList.remove('on');
   document.getElementById('prog').classList.remove('on');
-  document.getElementById('results').style.display='none';
+  document.getElementById('results').style.display = 'none';
   document.getElementById('raw').classList.remove('on');
-  document.getElementById('rawBtn').style.display='none';
-  document.getElementById('meta2').textContent='대기 중';
-  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('rawBtn').style.display = 'none';
+  document.getElementById('meta2').textContent = '대기 중';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progPct').textContent = '0%';
+
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 </script>
 </body>
