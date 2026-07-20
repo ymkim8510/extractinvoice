@@ -84,7 +84,7 @@ body{
 }
 
 .wrap{
-  max-width:980px;
+  max-width:1000px;
   margin:0 auto;
   padding:42px 22px 80px;
 }
@@ -102,7 +102,7 @@ body{
 
 .hero p{
   color:var(--muted);
-  max-width:760px;
+  max-width:780px;
   margin:0 auto;
 }
 
@@ -581,7 +581,7 @@ body{
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:1160px;
+  min-width:1240px;
 }
 
 th{
@@ -679,7 +679,7 @@ td.dim{
 <div class="wrap">
   <div class="hero">
     <h1>PDF를 엑셀 원장으로</h1>
-    <p>Product Master F열 Material code 기준으로 물품코드를 확정하고, 국립암센터처럼 사업자번호가 공백 포함 형태로 추출되어도 인식합니다.</p>
+    <p>거래일자 자동 추출/파일명 보정, Product Master F열 Material code 매칭, 국립암센터 사업자번호 보정을 포함합니다.</p>
   </div>
 
   <div class="card">
@@ -765,6 +765,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const OUTPUT_COLUMNS = [
+  '거래일자',
   '공급자명',
   '공급자 사업자등록번호',
   '납품처명',
@@ -876,6 +877,135 @@ function extractTaxIdsFromText(text){
   }
 
   return found;
+}
+
+function pad2(v){
+  return String(v).padStart(2,'0');
+}
+
+function formatYMD(y,m,d){
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+
+function extractYearFromFileName(fileName){
+  const fn = String(fileName || '');
+  const m = fn.match(/(20\d{2})/);
+
+  if(m){
+    return m[1];
+  }
+
+  return String(new Date().getFullYear());
+}
+
+function extractTransactionDate(text,fileName=''){
+  const str = String(text || '');
+  const fn = String(fileName || '');
+  let m;
+
+  // 1) 라벨 주변 날짜 우선: 거래일자 / 납품일자 / 발주일자 / 날짜
+  const labelPattern =
+    /(거래일자|납품일자|납품일|발주일자|발주일|일자|날짜)\s*[:：]?\s*([^\n\r]{0,40})/g;
+
+  let labelMatch;
+
+  while((labelMatch = labelPattern.exec(str)) !== null){
+    const near = labelMatch[2] || '';
+    const d = extractDateFromPlainText(near,fileName);
+
+    if(d) return d;
+  }
+
+  // 2) PDF 전체 텍스트에서 날짜 추출
+  const fromText = extractDateFromPlainText(str,fileName);
+
+  if(fromText) return fromText;
+
+  // 3) 파일명에서 날짜 추출
+  const fromFile = extractDateFromFileName(fn);
+
+  if(fromFile) return fromFile;
+
+  return '';
+}
+
+function extractDateFromPlainText(text,fileName=''){
+  const str = String(text || '');
+  let m;
+
+  // YYYY-MM-DD / YYYY.MM.DD / YYYY/MM/DD
+  m = str.match(/(20\d{2})\s*[-./]\s*(\d{1,2})\s*[-./]\s*(\d{1,2})/);
+
+  if(m){
+    return formatYMD(m[1],m[2],m[3]);
+  }
+
+  // YYYY년 MM월 DD일
+  m = str.match(/(20\d{2})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+
+  if(m){
+    return formatYMD(m[1],m[2],m[3]);
+  }
+
+  // YYYYMMDD
+  m = str.match(/\b(20\d{2})(\d{2})(\d{2})\b/);
+
+  if(m){
+    return formatYMD(m[1],m[2],m[3]);
+  }
+
+  // MM월 DD일
+  m = str.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+
+  if(m){
+    const y = extractYearFromFileName(fileName);
+    return formatYMD(y,m[1],m[2]);
+  }
+
+  return '';
+}
+
+function extractDateFromFileName(fileName){
+  const fn = String(fileName || '');
+  let m;
+
+  // YYYY-MM-DD / YYYY.MM.DD / YYYY/MM/DD
+  m = fn.match(/(20\d{2})\s*[-._/]\s*(\d{1,2})\s*[-._/]\s*(\d{1,2})/);
+
+  if(m){
+    return formatYMD(m[1],m[2],m[3]);
+  }
+
+  // YYYYMMDD
+  m = fn.match(/\b(20\d{2})(\d{2})(\d{2})\b/);
+
+  if(m){
+    return formatYMD(m[1],m[2],m[3]);
+  }
+
+  // YYYY-MM / YYYY.MM / YYYY_MM
+  m = fn.match(/(20\d{2})\s*[-._/]\s*(\d{1,2})(?!\d)/);
+
+  if(m){
+    return formatYMD(m[1],m[2],1);
+  }
+
+  // YYYYMM
+  m = fn.match(/\b(20\d{2})(\d{2})\b/);
+
+  if(m){
+    return formatYMD(m[1],m[2],1);
+  }
+
+  // N월
+  m = fn.match(/(\d{1,2})\s*월/);
+
+  if(m){
+    const y = extractYearFromFileName(fn);
+    return formatYMD(y,m[1],1);
+  }
+
+  return '';
 }
 
 function isUom(s){
@@ -1126,6 +1256,7 @@ function cleanupCompanyName(name){
 
 function blankHeader(){
   return {
+    transactionDate:'',
     supplierName:'',
     supplierTaxId:'',
     endUserName:'',
@@ -1135,10 +1266,11 @@ function blankHeader(){
 
 function mergeHeader(prev, cur){
   return {
-    supplierName: cur.supplierName || prev.supplierName || '',
-    supplierTaxId: cur.supplierTaxId || prev.supplierTaxId || '',
-    endUserName: cur.endUserName || prev.endUserName || '',
-    endUserTaxId: cur.endUserTaxId || prev.endUserTaxId || ''
+    transactionDate:cur.transactionDate || prev.transactionDate || '',
+    supplierName:cur.supplierName || prev.supplierName || '',
+    supplierTaxId:cur.supplierTaxId || prev.supplierTaxId || '',
+    endUserName:cur.endUserName || prev.endUserName || '',
+    endUserTaxId:cur.endUserTaxId || prev.endUserTaxId || ''
   };
 }
 
@@ -1292,11 +1424,17 @@ function groupItemsToLines(items){
   return groups;
 }
 
-function extractHeader(page, previousHeader){
+function extractHeader(page, previousHeader, fileName){
   const cur = blankHeader();
   const text = page.lines.map(x => x.text).join(' ');
   const oneLine = clean(text);
   const noSpace = compact(oneLine);
+
+  const txDate = extractTransactionDate(oneLine,fileName);
+
+  if(txDate){
+    cur.transactionDate = txDate;
+  }
 
   const taxIds = extractTaxIdsFromText(oneLine);
 
@@ -1397,7 +1535,6 @@ function isTableHeader(line){
 
   const nameHeader =
     c.includes('품명') ||
-    c.includes('물품명') ||
     c.includes('물품명') ||
     c.includes('품목명');
 
@@ -1993,6 +2130,7 @@ function parseJoyCodeLine(line){
 
 function buildOutputRow(header, item, fileName, pageNo){
   const r = {
+    '거래일자': header.transactionDate || '',
     '공급자명': header.supplierName || '',
     '공급자 사업자등록번호': header.supplierTaxId || '',
     '납품처명': header.endUserName || '',
@@ -2007,6 +2145,7 @@ function buildOutputRow(header, item, fileName, pageNo){
 
   const reasons = [];
 
+  if(!r['거래일자']) reasons.push('거래일자 누락');
   if(!r['공급자명']) reasons.push('공급자명 누락');
   if(!r['공급자 사업자등록번호']) reasons.push('공급자 사업자등록번호 누락');
   if(!r['납품처명']) reasons.push('납품처명 누락');
@@ -2223,7 +2362,7 @@ async function runExtract(){
         rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${page.pageNo}\n${'─'.repeat(54)}`);
         rawLines.push(...page.lines.map(x => x.text));
 
-        carryHeader = extractHeader(page, carryHeader);
+        carryHeader = extractHeader(page, carryHeader, f.name);
 
         const foundItems = parseItems(page);
         const before = rows.length;
@@ -2232,6 +2371,7 @@ async function runExtract(){
           const outRow = buildOutputRow(carryHeader, item, f.name, page.pageNo);
 
           if(
+            outRow['거래일자'] ||
             outRow['물품코드'] ||
             outRow['수량'] ||
             outRow['UOM'] ||
@@ -2352,6 +2492,7 @@ function renderResults(totalPages){
     </div>`;
 
   const C = [
+    ['거래일자','mono'],
     ['공급자명',''],
     ['공급자 사업자등록번호','mono'],
     ['납품처명',''],
@@ -2432,6 +2573,7 @@ function downloadXlsx(){
   const ws = XLSX.utils.json_to_sheet(data, {header:OUTPUT_COLUMNS});
 
   ws['!cols'] = [
+    {wch:14},
     {wch:24},
     {wch:22},
     {wch:24},
