@@ -1,92 +1,753 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>거래명세서 추출기</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--accent:#10a37f;--accent2:#0d8a6c;--bg:#fff;--soft:#f7f7f8;--border:#e5e5e5;--muted:#666;--warn:#b45309;--warnbg:#fef7ec;--err:#dc2626;--errbg:#fef2f2;--okbg:#e7f6f1;--mono:Consolas,"SF Mono",monospace;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif}*{box-sizing:border-box}body{margin:0;font-family:var(--font);color:#111;background:#fff}.topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 24px;position:sticky;top:0;background:rgba(255,255,255,.93);z-index:10}.logo{width:26px;height:26px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700}.badge{margin-left:auto;font-size:12px;color:#999;border:1px solid var(--border);background:var(--soft);border-radius:999px;padding:3px 10px}.wrap{max-width:1040px;margin:0 auto;padding:42px 22px 80px}.hero{text-align:center;margin-bottom:30px}.hero h1{font-size:31px;margin:0 0 8px}.hero p{color:var(--muted);margin:0}.card{border:1px solid var(--border);border-radius:16px;padding:23px;margin-bottom:16px;background:white;box-shadow:0 1px 2px rgba(0,0,0,.03),0 4px 12px rgba(0,0,0,.04)}.card-h{display:flex;align-items:center;gap:9px;margin-bottom:15px}.n{width:23px;height:23px;border-radius:50%;background:#f4f4f5;display:grid;place-items:center;color:#666;font-size:12px;font-weight:700}.meta{margin-left:auto;color:#999;font-size:13px}.callout{background:var(--warnbg);color:#7c4a10;border-radius:12px;padding:12px 14px;margin-bottom:15px;font-size:13px}.drop{border:1.5px dashed #d9d9e3;background:var(--soft);border-radius:12px;padding:32px 18px;text-align:center;cursor:pointer}.drop:hover,.drop.over{border-color:var(--accent);background:var(--okbg)}.drop-ico{width:44px;height:44px;margin:0 auto 10px;border-radius:50%;background:white;border:1px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:700;color:#999}.drop-t{font-weight:700;margin:0}.drop-s{font-size:13px;color:#999;margin:4px 0 0}input[type=file]{display:none}.btn{font:inherit;font-size:14px;font-weight:700;border-radius:9px;padding:10px 18px;border:1px solid transparent;cursor:pointer}.btn-p{background:var(--accent);color:white}.btn-p:hover:not(:disabled){background:var(--accent2)}.btn-p:disabled{background:#f4f4f5;color:#999;cursor:not-allowed}.btn-s{background:white;border-color:#d9d9e3}.files{display:none;flex-direction:column;gap:8px;margin-top:13px}.files.on{display:flex}.file{display:flex;align-items:center;gap:10px;background:var(--soft);border:1px solid var(--border);border-radius:9px;padding:9px 12px}.file-ico{width:36px;height:28px;border-radius:6px;background:var(--errbg);color:var(--err);font-size:9px;font-weight:700;display:grid;place-items:center}.file-ico.master{background:var(--okbg);color:var(--accent)}.file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px}.file-size{font-family:var(--mono);font-size:12px;color:#999}.file-x{border:0;background:transparent;color:#999;cursor:pointer;font-size:18px}.prog{display:none;margin-top:16px}.prog.on{display:block}.prog-bar{height:6px;background:#f4f4f5;border-radius:999px;overflow:hidden}.prog-fill{height:100%;width:0;background:var(--accent);transition:.25s}.prog-lbl{margin-top:7px;display:flex;justify-content:space-between;font-size:13px;color:#666}.console{display:none;margin-top:15px;background:#f4f4f5;border-radius:12px;padding:13px 15px;font-family:var(--mono);font-size:12.5px;line-height:1.85;max-height:270px;overflow:auto}.console.on{display:block}.c-hd{color:#111;font-weight:700}.c-ok{color:var(--accent)}.c-warn{color:var(--warn)}.c-err{color:var(--err)}.raw-btn{display:none;border:0;background:transparent;color:#999;cursor:pointer;font-size:13px;padding-top:8px}.raw{display:none;margin-top:10px;background:#f4f4f5;border-radius:12px;padding:13px 15px;font-family:var(--mono);font-size:12px;line-height:1.75;max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-all;color:#666}.raw.on{display:block}#results{display:none}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat{background:var(--soft);border:1px solid var(--border);border-radius:12px;padding:15px 17px}.stat-l{font-size:12px;color:#666;font-weight:700}.stat-v{font-size:26px;font-weight:800}.tbl-wrap{border:1px solid var(--border);border-radius:12px;overflow:hidden}.tbl-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:1160px}th{background:var(--soft);font-size:12px;color:#666;text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}td{font-size:13px;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}td.num{text-align:right;font-family:var(--mono)}td.mono{font-family:var(--mono)}tr.flag td{background:var(--warnbg)}.pill{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.pill-ok{background:var(--okbg);color:var(--accent)}.pill-wn{background:#fdeccd;color:var(--warn)}.note{font-size:12.5px;color:#999;margin-bottom:8px}@media(max-width:640px){.stats{grid-template-columns:1fr}.wrap{padding:32px 16px 70px}}
+  :root{
+    --bg:#fff; --bg-soft:#f7f7f8; --bg-sunken:#f4f4f5;
+    --border:#e5e5e5; --border-2:#d9d9e3;
+    --text:#0d0d0d; --text-2:#5d5d5d; --text-3:#8e8ea0;
+    --accent:#10a37f; --accent-h:#0d8a6c; --accent-bg:#e7f6f1;
+    --warn:#b45309; --warn-bg:#fef7ec;
+    --err:#dc2626; --err-bg:#fef2f2;
+    --radius:12px; --radius-lg:16px; --radius-sm:8px;
+    --shadow:0 1px 2px rgba(0,0,0,.03),0 4px 12px rgba(0,0,0,.04);
+    --font:'Inter','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .topbar{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);z-index:10}
+  .logo{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+  .topbar-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .topbar-badge{margin-left:auto;font-size:12px;color:var(--text-3);background:var(--bg-soft);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-weight:500}
+  .wrap{max-width:820px;margin:0 auto;padding:44px 24px 100px}
+  .hero{text-align:center;margin-bottom:40px}
+  .hero h1{font-size:32px;font-weight:600;letter-spacing:-.025em;line-height:1.25;margin-bottom:10px}
+  .hero p{font-size:15px;color:var(--text-2);max-width:46ch;margin:0 auto}
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .card-h{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+  .card-h h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .card-h .n{width:22px;height:22px;border-radius:50%;background:var(--bg-sunken);color:var(--text-2);font-size:11px;font-weight:600;display:grid;place-items:center;flex-shrink:0}
+  .card-h .meta{margin-left:auto;font-size:13px;color:var(--text-3)}
+  .callout{display:flex;gap:10px;background:var(--bg-soft);border-radius:var(--radius);padding:12px 14px;font-size:13.5px;color:var(--text-2);line-height:1.6;margin-bottom:16px}
+  .callout .ico{flex-shrink:0;font-size:15px;line-height:1.4}
+  .callout strong{color:var(--text);font-weight:600}
+  .callout code{font-family:var(--mono);font-size:12.5px;background:var(--bg-sunken);padding:1px 5px;border-radius:4px}
+  .callout.warn{background:var(--warn-bg);color:#7c4a10}
+  .callout.warn strong{color:#5c360b}
+  .fmts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .fmt-chip{font-size:11.5px;font-family:var(--mono);color:var(--text-2);background:var(--bg-soft);border:1px solid var(--border);border-radius:20px;padding:3px 10px}
+  .drop{border:1.5px dashed var(--border-2);border-radius:var(--radius);background:var(--bg-soft);padding:40px 20px;text-align:center;cursor:pointer;transition:all .16s ease}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-bg)}
+  .drop-ico{width:44px;height:44px;margin:0 auto 12px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;color:var(--text-3);transition:all .16s ease}
+  .drop:hover .drop-ico,.drop.over .drop-ico{color:var(--accent);border-color:var(--accent)}
+  .drop-t{font-size:14.5px;font-weight:500;margin-bottom:3px}
+  .drop-s{font-size:13px;color:var(--text-3)}
+  #fi{display:none}
+  .files{display:none;flex-direction:column;gap:8px;margin-top:14px}
+  .files.on{display:flex}
+  .file{display:flex;align-items:center;gap:11px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px}
+  .file-ico{width:28px;height:28px;flex-shrink:0;border-radius:6px;background:var(--err-bg);color:var(--err);display:grid;place-items:center;font-size:9px;font-weight:700}
+  .file-name{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-size{font-size:12px;color:var(--text-3);flex-shrink:0;font-family:var(--mono)}
+  .file-x{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;line-height:1;padding:2px 4px;border-radius:4px;flex-shrink:0}
+  .file-x:hover{color:var(--err);background:var(--err-bg)}
+  .btn{font-family:var(--font);font-size:14px;font-weight:500;padding:10px 18px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .14s ease}
+  .btn-p{background:var(--accent);color:#fff}
+  .btn-p:hover:not(:disabled){background:var(--accent-h)}
+  .btn-p:disabled{background:var(--bg-sunken);color:var(--text-3);cursor:not-allowed}
+  .btn-s{background:var(--bg);color:var(--text);border-color:var(--border-2)}
+  .btn-s:hover{background:var(--bg-soft)}
+  .btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+  .prog{display:none;margin-top:16px}
+  .prog.on{display:block}
+  .prog-bar{height:6px;background:var(--bg-sunken);border-radius:99px;overflow:hidden}
+  .prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .35s cubic-bezier(.4,0,.2,1)}
+  .prog-lbl{font-size:13px;color:var(--text-2);margin-top:8px;display:flex;justify-content:space-between}
+  .prog-pct{font-family:var(--mono);font-size:12.5px;color:var(--text-3)}
+  .console{display:none;margin-top:16px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.9;max-height:240px;overflow-y:auto;color:var(--text-2)}
+  .console.on{display:block}
+  .c-line{white-space:pre-wrap}
+  .c-hd{color:var(--text);font-weight:500}
+  .c-ok{color:var(--accent)}
+  .c-warn{color:var(--warn)}
+  .c-err{color:var(--err)}
+  .verify{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .verify-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .verify-head.pass{background:var(--accent-bg)}
+  .verify-head.warn{background:var(--warn-bg)}
+  .verify-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;flex-shrink:0;color:#fff}
+  .verify-head.pass .verify-badge{background:var(--accent)}
+  .verify-head.warn .verify-badge{background:var(--warn)}
+  .verify-title{font-size:14px;font-weight:600}
+  .verify-sub{font-size:12.5px;color:var(--text-2)}
+  .verify-body{padding:6px 16px 12px}
+  .check{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--bg-sunken)}
+  .check:last-child{border-bottom:none}
+  .check-mark{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+  .check-mark.ok{background:var(--accent-bg);color:var(--accent)}
+  .check-mark.no{background:var(--warn-bg);color:var(--warn)}
+  .check-mark.na{background:var(--bg-sunken);color:var(--text-3)}
+  .check-body{flex:1;min-width:0}
+  .check-name{font-size:13.5px;font-weight:500}
+  .check-detail{font-size:12.5px;color:var(--text-2);margin-top:2px;line-height:1.55}
+  .check-detail .mono{font-family:var(--mono);font-size:12px}
+  .fieldbars{margin-top:8px;display:grid;gap:6px}
+  .fb{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:10px}
+  .fb-name{font-size:12px;color:var(--text-2);font-family:var(--mono)}
+  .fb-track{height:6px;background:var(--bg-sunken);border-radius:99px;overflow:hidden}
+  .fb-fill{height:100%;border-radius:99px}
+  .fb-pct{font-size:12px;font-family:var(--mono);color:var(--text-2);text-align:right}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .stat-l{font-size:12.5px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+  .stat-v{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1}
+  .stat-v .u{font-size:14px;color:var(--text-3);font-weight:400;margin-left:3px}
+  .stat.ok .stat-v{color:var(--accent)}
+  .stat.warn .stat-v{color:var(--warn)}
+  .tbl-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:980px}
+  thead th{background:var(--bg-soft);font-size:12px;font-weight:600;color:var(--text-2);text-align:left;padding:10px 13px;white-space:nowrap;border-bottom:1px solid var(--border)}
+  tbody td{padding:9px 13px;font-size:13px;border-bottom:1px solid var(--border);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:var(--bg-soft)}
+  tbody tr.flag td{background:var(--warn-bg)}
+  tbody tr.flag:hover td{background:#fdf0dd}
+  td.mono{font-family:var(--mono);font-size:12.5px}
+  td.num{font-family:var(--mono);font-size:12.5px;text-align:right}
+  td.dim{color:var(--text-3)}
+  .pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:99px}
+  .pill-ok{background:var(--accent-bg);color:var(--accent)}
+  .pill-wn{background:#fdeccd;color:var(--warn)}
+  .tbl-note{font-size:12.5px;color:var(--text-3);margin-bottom:9px}
+  .raw-btn{display:none;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-3);padding:7px 0 0;font-family:var(--font)}
+  .raw-btn:hover{color:var(--text)}
+  .raw{display:none;margin-top:10px;background:var(--bg-sunken);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--text-2);max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+  .raw.on{display:block}
+  #results{display:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:640px){.hero h1{font-size:26px}.stats{grid-template-columns:1fr}.wrap{padding:32px 16px 80px}.fb{grid-template-columns:104px 1fr 40px}}
 </style>
 </head>
 <body>
-<div class="topbar"><div class="logo">◆</div><b>거래명세서 추출기</b><span class="badge">브라우저에서 처리</span></div>
-<div class="wrap">
-  <div class="hero"><h1>PDF를 엑셀 원장으로</h1><p>기쁨병원/올헬스는 PDF.js 텍스트 분리 현상을 고려한 좌표/셀 복원 수량 파서를 사용합니다.</p></div>
-  <div class="card"><div class="card-h"><span class="n">M</span><h2>Product Master 선택</h2><span class="meta" id="masterMeta">선택 안 됨</span></div><div class="callout">Product Master Excel의 <b>F열 Material code</b>를 기준으로 물품코드를 검증합니다.</div><input type="file" id="masterFi" accept=".xlsx,.xls,.csv"><button class="btn btn-s" onclick="masterFi.click()">Product Master 업로드</button><div class="files" id="masterFiles"></div></div>
-  <div class="card"><div class="card-h"><span class="n">1</span><h2>거래명세서 PDF 선택</h2><span class="meta" id="meta1">PDF · 여러 개 가능</span></div><div class="drop" id="drop" onclick="fi.click()"><div class="drop-ico">PDF</div><p class="drop-t">PDF를 끌어다 놓거나 클릭해서 선택</p><p class="drop-s">여러 파일 가능</p></div><input type="file" id="fi" accept=".pdf" multiple><div class="files" id="files"></div></div>
-  <div class="card"><div class="card-h"><span class="n">2</span><h2>추출 & 검증</h2><span class="meta" id="meta2">대기 중</span></div><button class="btn btn-p" id="run" disabled onclick="runExtract()">추출 시작</button><div class="prog" id="prog"><div class="prog-bar"><div class="prog-fill" id="progFill"></div></div><div class="prog-lbl"><span id="progLbl"></span><span id="progPct">0%</span></div></div><div class="console" id="console"></div><button class="raw-btn" id="rawBtn" onclick="toggleRaw()">원문 텍스트 보기</button><pre class="raw" id="raw"></pre></div>
-  <div class="card" id="results"><div class="card-h"><span class="n">3</span><h2>결과 & 검증 리포트</h2><span class="meta" id="meta3"></span></div><div class="stats" id="stats"></div><p class="note" id="tblNote"></p><div class="tbl-wrap"><div class="tbl-scroll" id="tbl"></div></div><div style="margin-top:17px"><button class="btn btn-p" onclick="downloadXlsx()">엑셀 다운로드</button> <button class="btn btn-s" onclick="resetAll()">새로 시작</button></div></div>
+<div class="topbar">
+  <div class="logo">◈</div>
+  <span class="topbar-title">거래명세서 추출기</span>
+  <span class="topbar-badge">브라우저에서 처리</span>
 </div>
+<div class="wrap">
+  <div class="hero">
+    <h1>PDF를 엑셀 원장으로</h1>
+    <p>여러 병원 양식의 거래명세서를 자동으로 인식해 품목을 읽고, 결과가 맞는지 검증합니다.</p>
+  </div>
+  <div class="card">
+    <div class="card-h"><span class="n">1</span><h2>파일 선택</h2><span class="meta" id="meta1">PDF · 여러 개 가능</span></div>
+    <div class="fmts">
+      <span class="fmt-chip">부양메디칼</span>
+      <span class="fmt-chip">세원메디(AMC)</span>
+      <span class="fmt-chip">기쁨병원</span>
+      <span class="fmt-chip">국립암센터(을)</span>
+      <span class="fmt-chip">자동 감지</span>
+    </div>
+    <div class="callout warn"><span class="ico">⚠️</span><div><strong>텍스트가 들어 있는 PDF</strong>만 읽을 수 있습니다. 스캔한 이미지 PDF는 품목이 <code>0</code>개로 나옵니다 — 그럴 땐 아래 원문 보기로 확인하세요.</div></div>
+    <div class="drop" id="drop" role="button" tabindex="0"
+         onclick="document.getElementById('fi').click()"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fi').click()}">
+      <div class="drop-ico"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <p class="drop-t">PDF를 끌어다 놓거나 클릭해서 선택</p>
+      <p class="drop-s">여러 파일을 한 번에 올릴 수 있어요</p>
+    </div>
+    <input type="file" id="fi" accept=".pdf" multiple>
+    <div class="files" id="files"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><span class="n">2</span><h2>추출 &amp; 검증</h2><span class="meta" id="meta2">대기 중</span></div>
+    <button class="btn btn-p" id="run" disabled onclick="runExtract()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      추출 시작
+    </button>
+    <div class="prog" id="prog">
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-lbl"><span id="progLbl"></span><span class="prog-pct" id="progPct">0%</span></div>
+    </div>
+    <div class="console" id="console"></div>
+    <button class="raw-btn" id="rawBtn" onclick="toggleRaw()">원문 텍스트 보기</button>
+    <pre class="raw" id="raw"></pre>
+  </div>
+  <div class="card" id="results">
+    <div class="card-h"><span class="n">3</span><h2>결과 &amp; 검증 리포트</h2><span class="meta" id="meta3"></span></div>
+    <div class="verify" id="verify"></div>
+    <div class="stats" id="stats"></div>
+    <p class="tbl-note" id="tblNote"></p>
+    <div class="tbl-wrap"><div class="tbl-scroll" id="tbl"></div></div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="downloadXlsx()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        엑셀 다운로드
+      </button>
+      <button class="btn btn-s" onclick="resetAll()">새로 시작</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 'use strict';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-const OUTPUT_COLUMNS=['거래일자','공급자명','공급자 사업자등록번호','납품처명','납품처 사업자등록번호','물품코드','수량','UOM','EDI Code','Source File','Page','Review Flag','Review Reason'];
-const VALID_UOM=new Set(['EA','BOX','BX','DZN','PACK','PAC','PK','SET']);
-let files=[],rows=[],rawLines=[],docStats=[];let materialMasterSet=new Set(),materialMasterList=[],materialMasterLoaded=false,masterFileName='';
-const clean=v=>String(v??'').replace(/\s+/g,' ').trim();const compact=v=>clean(v).replace(/\s+/g,'');const digitsOnly=v=>String(v??'').replace(/\D/g,'');
-function escapeHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function normalizeCompanyName(name){const s=clean(name),c=compact(s);if(c.includes('세원메디'))return'주식회사 세원메디';if(c.includes('주식회사올헬스')||c.includes('올헬스'))return'주식회사 올헬스';return s}
-function normalizeMaterialCode(v){return String(v??'').replace(/\u00A0/g,' ').replace(/[()]/g,'').replace(/,$/,'').trim().toUpperCase()}
-function normalizeForContains(v){return String(v??'').toUpperCase().replace(/\u00A0/g,' ').replace(/Ⅱ/g,'II').replace(/Ⅲ/g,'III').replace(/Ⅳ/g,'IV').replace(/Ⅴ/g,'V').replace(/[^A-Z0-9]/g,'')}
-function normalizeTaxId(s){const d=digitsOnly(s);return d.length===10?`${d.slice(0,3)}-${d.slice(3,5)}-${d.slice(5)}`:clean(s)}
-function extractTaxIdsFromText(text){const found=[];function pushTax(raw){const d=digitsOnly(raw);if(d.length===10){const n=normalizeTaxId(d);if(!found.includes(n))found.push(n)}}const source=String(text??'');for(const m of source.match(/\d{3}\s*[-]?\s*\d{2}\s*[-]?\s*\d{5}/g)||[])pushTax(m);for(const m of source.replace(/\s+/g,'').match(/\d{10}/g)||[])pushTax(m);return found}
-function pad2(v){return String(v).padStart(2,'0')}function formatYMD(y,m,d){return`${y}-${pad2(m)}-${pad2(d)}`}function extractYearFromFileName(fn){const m=String(fn||'').match(/(20\d{2})/);return m?m[1]:String(new Date().getFullYear())}
-function extractDateFromPlainText(text,fileName=''){const s=String(text||'');let m;m=s.match(/(20\d{2})\s*[-./]\s*(\d{1,2})\s*[-./]\s*(\d{1,2})/);if(m)return formatYMD(m[1],m[2],m[3]);m=s.match(/(20\d{2})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);if(m)return formatYMD(m[1],m[2],m[3]);m=s.match(/\b(20\d{2})(\d{2})(\d{2})\b/);if(m)return formatYMD(m[1],m[2],m[3]);m=s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);if(m)return formatYMD(extractYearFromFileName(fileName),m[1],m[2]);return''}
-function extractDateFromFileName(fn){const s=String(fn||'');let m;m=s.match(/(20\d{2})\s*[-._/]\s*(\d{1,2})\s*[-._/]\s*(\d{1,2})/);if(m)return formatYMD(m[1],m[2],m[3]);m=s.match(/\b(20\d{2})(\d{2})(\d{2})\b/);if(m)return formatYMD(m[1],m[2],m[3]);m=s.match(/(20\d{2})\s*[-._/]\s*(\d{1,2})(?!\d)/);if(m)return formatYMD(m[1],m[2],1);m=s.match(/\b(20\d{2})(\d{2})\b/);if(m)return formatYMD(m[1],m[2],1);m=s.match(/(\d{1,2})\s*월/);if(m)return formatYMD(extractYearFromFileName(s),m[1],1);return''}
-function extractTransactionDate(text,fileName=''){const str=String(text||'');const label=/(거래일자|납품일자|납품일|발주일자|발주일|일자|날짜)\s*[:：]?\s*([^\n\r]{0,40})/g;let m;while((m=label.exec(str))!==null){const d=extractDateFromPlainText(m[2]||'',fileName);if(d)return d}return extractDateFromPlainText(str,fileName)||extractDateFromFileName(fileName)||''}
-function isUom(s){return VALID_UOM.has(clean(s).toUpperCase())}function normalizeUom(s){return clean(s).toUpperCase()}function isQty(s){return /^\d{1,8}$/.test(clean(s).replace(/,/g,''))}function toQty(s){const t=clean(s).replace(/,/g,'');if(!/^\d+(\.\d+)?$/.test(t))return'';const n=Number(t);return Number.isFinite(n)?n:''}function isRowNo(s){return /^\d{1,4}$/.test(clean(s))}
-function isLikelyEdiCode(s){const t=clean(s).replace(/[()]/g,'').replace(/,$/,'');if(!t)return false;if(t==='비보험')return true;if(/^[BMGTAZ]\d{6,}$/i.test(t))return true;if(/^[A-Z]{1,5}\d{2,}[A-Z0-9]*$/i.test(t)&&t.length>=7)return true;if(/^[A-Z0-9]{7,}$/i.test(t)&&/[A-Z]/i.test(t)&&/\d/.test(t))return true;return false}
-function isInMaterialMaster(code){if(!materialMasterLoaded)return false;const c=normalizeMaterialCode(code);return !!c&&materialMasterSet.has(c)}
-function isLikelyProductCode(s){const t=normalizeMaterialCode(s);if(!t||t==='비보험'||isLikelyEdiCode(t)||/^\d+$/.test(t))return false;if(materialMasterLoaded)return isInMaterialMaster(t);if(/^\d+(CM|MM)$/i.test(t)||/^\d+[A-Z]$/i.test(t))return false;return(/^HAR\d+$/i.test(t)||/^VCP\d+[A-Z]?$/i.test(t)||/^W\d+[A-Z]?$/i.test(t)||/^MCS\d+$/i.test(t)||/^ANX\d+$/i.test(t)||/^SX[A-Z0-9]+$/i.test(t)||/^GST\d+[A-Z]?$/i.test(t)||/^ECR\d+[A-Z]?$/i.test(t)||/^EZ\d+[A-Z]?$/i.test(t)||/^EL\d/i.test(t)||/^PMW\d+/i.test(t)||/^\d{4}[A-Z]$/i.test(t))}
-function pickEdiFromTokens(tokens){for(const token of tokens){for(const p of clean(token).split(/\s+/).filter(Boolean)){const t=p.replace(/[()]/g,'').replace(/,$/,'');if(isLikelyEdiCode(t))return t}}return''}
-function pickMaterialCodeByMaster(candidates){if(!materialMasterLoaded)return'';for(const c of candidates){const code=normalizeMaterialCode(c);if(code&&materialMasterSet.has(code))return code}return''}
-function findMaterialCodeInText(text){if(!materialMasterLoaded)return'';const raw=String(text??'');for(const token of raw.split(/[\s,\/;:()\[\]{}]+/).map(normalizeMaterialCode).filter(Boolean)){if(materialMasterSet.has(token))return token}const normText=normalizeForContains(raw);for(const code of materialMasterList){const c=normalizeMaterialCode(code);if(!c||/^\d+$/.test(c)||c.length<4)continue;if(normText.includes(normalizeForContains(c)))return c}return''}
-function findMasterCodeInLine(lineText){return findMaterialCodeInText(lineText)}
-function fillBlankMaterialCodes(items,lines){if(!materialMasterLoaded)return;const hits=[];for(let i=0;i<lines.length;i++){const code=findMasterCodeInLine(lines[i]);if(code)hits.push({code,line:i,used:false})}for(const it of items){if(it.materialCode||it._start==null)continue;let best=-1,bestDist=999;for(let h=0;h<hits.length;h++){if(hits[h].used)continue;const d=Math.min(Math.abs(hits[h].line-it._start),Math.abs(hits[h].line-it._end));if(d<=3&&d<bestDist){best=h;bestDist=d}}if(best>=0){it.materialCode=hits[best].code;hits[best].used=true}}}
-function cleanupCompanyName(name){let s=clean(name).replace(/^[:：\-]+/,'').replace(/\s*성명.*$/,'').replace(/\s*대표.*$/,'').replace(/\s*사업장.*$/,'').trim();if(!s)return'';const bad=['공급자','공급받는자','사업자등록번호','등록번호','상호','상 호','성명','업태','종목'];if(bad.some(b=>compact(s)===compact(b)))return'';return normalizeCompanyName(s)}
-function blankHeader(){return{transactionDate:'',supplierName:'',supplierTaxId:'',endUserName:'',endUserTaxId:''}}function mergeHeader(prev,cur){return{transactionDate:cur.transactionDate||prev.transactionDate||'',supplierName:normalizeCompanyName(cur.supplierName||prev.supplierName||''),supplierTaxId:cur.supplierTaxId||prev.supplierTaxId||'',endUserName:normalizeCompanyName(cur.endUserName||prev.endUserName||''),endUserTaxId:cur.endUserTaxId||prev.endUserTaxId||''}}
-async function loadProductMasterFile(file){const ab=await file.arrayBuffer();const wb=XLSX.read(ab,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});const set=new Set();for(let r=0;r<data.length;r++){const code=normalizeMaterialCode(data[r][5]);if(!code||['MATERIAL CODE','MATERIAL','MATERIALCODE'].includes(code))continue;set.add(code)}materialMasterSet=set;materialMasterList=[...set].filter(Boolean).sort((a,b)=>b.length-a.length);materialMasterLoaded=set.size>0;masterFileName=file.name;masterMeta.textContent=materialMasterLoaded?`${file.name} · ${set.size.toLocaleString()}개 코드`:`${file.name} · 코드 없음`;renderMasterFile(file);say(`Product Master 로드 완료 — F열 Material code ${set.size.toLocaleString()}개`,materialMasterLoaded?'ok':'warn')}
-function renderMasterFile(file){masterFiles.innerHTML='';if(!file){masterFiles.classList.remove('on');return}const d=document.createElement('div');d.className='file';d.innerHTML=`<span class="file-ico master">XLSX</span><span class="file-name">${escapeHtml(file.name)}</span><span class="file-size">${(file.size/1024).toFixed(0)} KB</span><button class="file-x" onclick="clearMaster()">×</button>`;masterFiles.appendChild(d);masterFiles.classList.add('on')}
-function clearMaster(){materialMasterSet=new Set();materialMasterList=[];materialMasterLoaded=false;masterFileName='';masterFi.value='';masterMeta.textContent='선택 안 됨';renderMasterFile(null)}
-async function readPdfPages(file){const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;const pages=[];for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const viewport=page.getViewport({scale:1});const tc=await page.getTextContent();const items=[];for(const it of tc.items){const str=clean(it.str);if(!str)continue;const x=it.transform[4],y=it.transform[5],fs=Math.max(Math.abs(it.transform[0]),Math.abs(it.transform[3]))||10,w=it.width&&it.width>0?it.width:fs*str.length*.55;items.push({str,x,y,w,fs})}pages.push({pageNo:p,width:viewport.width,height:viewport.height,items,lines:groupItemsToLines(items)})}return pages}
-function groupItemsToLines(items){const sorted=[...items].sort((a,b)=>b.y-a.y||a.x-b.x),groups=[];for(const it of sorted){const tol=Math.max(2.5,it.fs*.45);let g=groups.find(x=>Math.abs(x.y-it.y)<=tol);if(!g){g={y:it.y,items:[]};groups.push(g)}g.items.push(it);g.y=g.items.reduce((s,v)=>s+v.y,0)/g.items.length}groups.sort((a,b)=>b.y-a.y);for(const g of groups){g.items.sort((a,b)=>a.x-b.x);g.text=clean(g.items.map(x=>x.str).join(' '))}return groups}
-function extractHeader(page,prev,fileName){const cur=blankHeader();const oneLine=clean(page.lines.map(x=>x.text).join(' '));const noSpace=compact(oneLine);const txDate=extractTransactionDate(oneLine,fileName);if(txDate)cur.transactionDate=txDate;const taxIds=extractTaxIdsFromText(oneLine);if(taxIds.length>=1)cur.supplierTaxId=taxIds[0];if(taxIds.length>=2)cur.endUserTaxId=taxIds[1];const sangho=oneLine.match(/상\s*호\s*(.*?)\s*성명.*?상\s*호\s*(.*?)\s*성명/);if(sangho){cur.supplierName=cleanupCompanyName(sangho[1]);cur.endUserName=cleanupCompanyName(sangho[2])}if(!cur.supplierName&&noSpace.includes('세원메디'))cur.supplierName='주식회사 세원메디';if(!cur.supplierName&&noSpace.includes('아산메디칼'))cur.supplierName=noSpace.includes('(주)아산메디칼')?'(주)아산메디칼':'아산메디칼';if(!cur.endUserName&&noSpace.includes('(주)이지메디컴'))cur.endUserName='(주)이지메디컴';if(!cur.endUserName&&noSpace.includes('이지메디컴'))cur.endUserName='이지메디컴';if(!cur.endUserName&&noSpace.includes('서울아산병원'))cur.endUserName='서울아산병원';if(!cur.endUserName&&noSpace.includes('국립암센타'))cur.endUserName='국립암센타';if(!cur.endUserName&&noSpace.includes('국립암센터'))cur.endUserName='국립암센터';if(noSpace.includes('주식회사올헬스')||noSpace.includes('올헬스')||noSpace.includes('allhealth2020@daum.net')){cur.supplierName='주식회사 세원메디';cur.endUserName='주식회사 올헬스';if(!cur.supplierTaxId||cur.supplierTaxId==='119-81-66872')cur.supplierTaxId='215-86-18654';if(!cur.endUserTaxId||cur.endUserTaxId==='215-86-18654')cur.endUserTaxId='119-81-66872'}if(noSpace.includes('국립암센터')||noSpace.includes('국립암센타')){cur.endUserName=noSpace.includes('국립암센터')?'국립암센터':'국립암센타';const ncc=extractTaxIdsFromText(oneLine);if(ncc.length>=1)cur.supplierTaxId=ncc[0];if(ncc.length>=2)cur.endUserTaxId=ncc[1];const ct=oneLine.replace(/\s+/g,'');if(!cur.endUserTaxId&&ct.includes('1288206609'))cur.endUserTaxId='128-82-06609'}return mergeHeader(prev,cur)}
-function isJoyHospitalLike(page){const text=compact(page.lines.map(x=>x.text).join(' '));return text.includes('주식회사올헬스')||text.includes('올헬스')||text.includes('allhealth2020@daum.net')||text.includes('NO품명박스당')||text.includes('품명박스당')||text.includes('개수수량EA')||text.includes('수량EA단가')}
-function isNationalCancerLike(page){const text=compact(page.lines.map(x=>x.text).join(' '));return text.includes('국립암센타')||text.includes('국립암센터')}
-function isTableHeader(line){const c=compact(line);const name=c.includes('품명')||c.includes('물품명')||c.includes('품목명'),code=c.includes('물품코드')||c.includes('품목코드')||c.includes('EDI코드')||c.includes('보험코드')||c.includes('규격');return(c.includes('번호')&&(name||code))||(c.includes('NO')&&name)||(c.includes('납품일')&&name)||c.includes('수량EDI코드')}
-function isCodeTableHeader(line){const c=compact(line);return(c.includes('품목코드')||c.includes('물품코드')||c.includes('보험코드'))&&(c.includes('단위')||c.includes('EA')||c.includes('BX')||c.includes('DZN'))}
-function isTableEnd(line){const c=compact(line);return c.includes('검수')||c.includes('담당부서장')||c.includes('자산관리담당')||c.includes('합계금액')||c.includes('공급가액세액합계')||c.includes('세액합계')||c.includes('上記')}
-function normalizeItemText(s){return clean(s).replace(/(\d)(비보험)/g,'$1 비보험').replace(/(EA|BOX|BX|DZN|PACK|PAC|PK|SET)(\d)/gi,'$1 $2').replace(/(\d)([A-Z]\d{6,})/g,'$1 $2').replace(/([A-Z0-9&™]+)(EA|BX|DZN|BOX|PACK|SET)\b/gi,'$1 $2').replace(/\s+/g,' ').trim()}
-function preferSpecTokens(tokens){const arr=tokens.map(clean).filter(Boolean);const m1=findMaterialCodeInText(arr.join(' '));if(m1)return m1;const m2=pickMaterialCodeByMaster(arr);if(m2)return m2;return arr.join(' ')}
-function cleanProductCodeFromSpec(spec){const s=clean(spec);if(!s)return'';const from=findMaterialCodeInText(s);if(from)return from;const cand=[];s.split(/[\s,\/]+/).map(normalizeMaterialCode).filter(Boolean).forEach(v=>cand.push(v));cand.push(normalizeMaterialCode(s));const matched=pickMaterialCodeByMaster(cand);if(matched)return matched;if(materialMasterLoaded)return'';for(const t of cand)if(isLikelyProductCode(t))return t;return''}
-function parseGroupToRegularItem(groupLines){let tokens=normalizeItemText(groupLines.join(' ')).split(/\s+/).map(clean).filter(Boolean);if(tokens.length<3||!isRowNo(tokens[0]))return null;const rowNo=tokens.shift();let hospitalItemCode='';if(tokens.length&&/^\d{5,10}$/.test(tokens[0]))hospitalItemCode=tokens.shift();const uomIdx=tokens.findIndex(isUom);if(uomIdx<0)return null;const uom=normalizeUom(tokens[uomIdx]);let qty='',qtyIdx=-1;for(let i=uomIdx+1;i<tokens.length;i++)if(isQty(tokens[i])){qty=tokens[i];qtyIdx=i;break}if(!qty)return null;let edi='';for(let i=qtyIdx+1;i<tokens.length;i++)if(isLikelyEdiCode(tokens[i])){edi=tokens[i];break}if(!edi)edi=pickEdiFromTokens(tokens);const before=tokens.slice(0,uomIdx);const rawSpec=preferSpecTokens(before);const materialCode=findMaterialCodeInText(groupLines.join(' '))||cleanProductCodeFromSpec(rawSpec);return{rowNo:Number(rowNo),materialCode,hospitalItemCode,rawSpec,qty:toQty(qty),uom,edi}}
-function parseItems(page){if(isJoyHospitalLike(page))return parseJoyHospitalSeparatedTables(page);if(isNationalCancerLike(page)){const n=parseNationalCancerTable(page);if(n.length)return n}const reg=parseRegularTable(page);return reg.length?reg:parseLooseRegularItems(page.lines.map(x=>x.text))}
-function parseNationalCancerTable(page){const lines=page.lines.map(x=>x.text),items=[];let inTable=false;for(const raw of lines){const c=compact(raw);if(c.includes('수량EDI코드')||c.includes('물품명번호계정규격금액')){inTable=true;continue}if(!inTable)continue;if(isTableEnd(raw))break;const s=normalizeItemText(raw);if(!/^(EA|BOX|BX|DZN|PACK|PAC|PK|SET)\s+/i.test(s))continue;const tokens=s.split(/\s+/).map(clean).filter(Boolean);if(tokens.length>=2&&isUom(tokens[0])&&isQty(tokens[1])){const rest=tokens.slice(2).join(' ');items.push({rowNo:items.length+1,materialCode:findMaterialCodeInText(rest)||pickMaterialCodeByMaster(tokens.slice(2))||'',qty:toQty(tokens[1]),uom:normalizeUom(tokens[0]),edi:pickEdiFromTokens(tokens.slice(2))})}}return items}
-function parseRegularTable(page){const lines=page.lines.map(x=>x.text),items=[];let inTable=false,current=null,curStart=-1;function fin(end){if(!current)return;const item=parseGroupToRegularItem(current);if(item&&(item.materialCode||item.qty||item.uom||item.edi)){item._start=curStart;item._end=end;items.push(item)}current=null}for(let idx=0;idx<lines.length;idx++){const s=clean(lines[idx]);if(!s)continue;if(isTableHeader(s)){inTable=true;fin(idx-1);continue}if(!inTable)continue;if(isCodeTableHeader(s)){fin(idx-1);break}if(isTableEnd(s)){fin(idx-1);inTable=false;continue}const n=normalizeItemText(s);if(/^\d{1,4}\s+/.test(n)){fin(idx-1);current=[n];curStart=idx}else if(current)current.push(n)}fin(lines.length-1);if(materialMasterLoaded)fillBlankMaterialCodes(items,lines);return items}
-function parseLooseRegularItems(lines){const items=[],tokens=normalizeItemText(lines.join(' ')).split(/\s+/).map(clean).filter(Boolean);let i=0;while(i<tokens.length){if(!isRowNo(tokens[i])){i++;continue}let next=i+1;while(next<tokens.length&&!isRowNo(tokens[next]))next++;const item=parseGroupToRegularItem([tokens.slice(i,next).join(' ')]);if(item)items.push(item);i=Math.max(next,i+1)}return items}
-function isJoyMaterialCodeLine(line){const tokens=normalizeItemText(line).split(/\s+/).map(normalizeMaterialCode).filter(Boolean);if(tokens.length<2)return false;const hasUom=tokens.some(isUom),hasEdi=tokens.some(isLikelyEdiCode),hasComma=tokens.some(t=>/^\d{1,3}(,\d{3})+$/.test(t));let hasCode=false;for(const t of tokens){if(materialMasterLoaded?isInMaterialMaster(t):isLikelyProductCode(t)){hasCode=true;break}}return hasCode&&hasUom&&(hasEdi||hasComma)}
-function extractJoyQtyFromText(text){const tokens=String(text||'').split(/\s+/).map(clean).filter(Boolean),nums=[];for(const t of tokens){if(/^\d+\-\d+$/.test(t))return toQty(t.split('-')[1]);if(/^\d{1,3}(,\d{3})+$/.test(t)){nums.push({value:Number(t.replace(/,/g,'')),comma:true});continue}if(/^\d+$/.test(t))nums.push({value:Number(t),comma:false})}if(!nums.length)return'';const ci=nums.findIndex(x=>x.comma);if(ci>=0){const before=nums.slice(0,ci).filter(x=>!x.comma);if(before.length)return before[before.length-1].value}const plain=nums.filter(x=>!x.comma);if(plain.length>=2)return plain[plain.length-1].value;if(plain.length===1)return plain[0].value;return''}
-function removeJoyTail(text){const arr=String(text||'').split(/\s+/).map(clean).filter(Boolean);while(arr.length){const last=arr[arr.length-1];if(/^\d{1,3}(,\d{3})+$/.test(last)||/^\d+\-\d+$/.test(last)||/^\d+$/.test(last)){arr.pop();continue}break}return clean(arr.join(' '))}
-function lineText(line){return clean((line.items||[]).map(x=>x.str).join(' '))}
-function clusterByY(items,tol){const sorted=[...items].filter(x=>clean(x.str)).sort((a,b)=>b.y-a.y||a.x-b.x),groups=[];for(const it of sorted){let g=groups.find(r=>Math.abs(r.y-it.y)<=tol);if(!g){g={y:it.y,items:[]};groups.push(g)}g.items.push(it);g.y=g.items.reduce((s,v)=>s+v.y,0)/g.items.length}groups.sort((a,b)=>b.y-a.y);for(const g of groups){g.items.sort((a,b)=>a.x-b.x);g.text=clean(g.items.map(x=>x.str).join(' '))}return groups}
-function parseJoyHospitalSeparatedTables(page){const nameRows=parseJoyNameRows(page);const codeRows=parseJoyCodeTable(page.lines.map(x=>x.text));console.log('[JOY] nameRows',nameRows);console.log('[JOY] codeRows',codeRows);if(!nameRows.length||!codeRows.length)return[];const count=Math.min(nameRows.length,codeRows.length),out=[];for(let i=0;i<count;i++){const n=nameRows[i],c=codeRows[i];out.push({rowNo:n.rowNo||i+1,materialCode:c.itemCode||'',hospitalItemCode:'',rawSpec:n.desc||'',qty:n.qty,uom:c.uom||'',edi:c.edi||''})}return out.filter(x=>x.materialCode||x.qty||x.uom||x.edi)}
-function parseJoyNameRows(page){let rows=parseJoyNameRowsFromGroups(page.lines.map(g=>({text:lineText(g)})));if(rows.length)return rows;rows=parseJoyNameRowsFromGroups(clusterByY(page.items,11));if(rows.length)return rows;return parseJoyNameRowsFromCellSequence(page.items)}
-function parseJoyNameRowsFromGroups(groups){const rows=[];let started=false;for(const g of groups){const s=clean(g.text),c=compact(s);if(started&&isJoyMaterialCodeLine(s))break;if(started&&(c.includes('전자세금계산서')||c.includes('입금계좌')||c.includes('예금주')||c.includes('거래처명')||c.includes('세액합계')||isTableEnd(s)))break;const m=s.match(/^(\d{1,4})\s+(.+)$/);if(!m)continue;const rowNo=Number(m[1]),body=clean(m[2]);if(rowNo<1||rowNo>80||!/[A-Za-z가-힣]/.test(body)||isJoyMaterialCodeLine(body))continue;const qty=extractJoyQtyFromText(body);if(qty==='')continue;started=true;rows.push({rowNo,qty,desc:removeJoyTail(body)})}return normalizeJoyRows(rows)}
-function parseJoyNameRowsFromCellSequence(items){const ordered=[...items].filter(x=>clean(x.str)).sort((a,b)=>b.y-a.y||a.x-b.x).map(x=>clean(x.str));const rows=[];let cur=null;function flush(){if(!cur)return;const body=clean(cur.parts.join(' '));const qty=extractJoyQtyFromText(body);if(body&&/[A-Za-z가-힣]/.test(body)&&qty!=='')rows.push({rowNo:cur.rowNo,qty,desc:removeJoyTail(body)});cur=null}for(const t of ordered){const rn=/^\d{1,2}$/.test(t)?Number(t):null;if(rn&&rn>=1&&rn<=80){if(cur&&cur.parts.length)flush();cur={rowNo:rn,parts:[]};continue}if(!cur)continue;if(isJoyMaterialCodeLine(t)){flush();break}const c=compact(t);if(c.includes('전자세금계산서')||c.includes('입금계좌')||c.includes('예금주')||c.includes('거래처명')||c.includes('세액합계')){flush();break}cur.parts.push(t)}flush();return normalizeJoyRows(rows)}
-function normalizeJoyRows(rows){const result=[],seen=new Set();for(const r of rows){if(!r||!r.rowNo||seen.has(r.rowNo)||r.qty===''||r.qty==null)continue;seen.add(r.rowNo);result.push(r)}result.sort((a,b)=>a.rowNo-b.rowNo);return result}
-function parseJoyCodeTable(lines){const arr=[];let inCode=false,pending=null;function flush(){if(pending&&pending.itemCode&&pending.uom)arr.push({itemCode:pending.itemCode,uom:pending.uom,edi:pending.edi||''});pending=null}for(const raw of lines){const s=normalizeItemText(raw),c=compact(s);if(!inCode&&isJoyMaterialCodeLine(s))inCode=true;if(!inCode)continue;if(isTableEnd(s)||c.includes('전자세금계산서')||c.includes('입금계좌')||c.includes('예금주')||c.includes('거래처명')||c.includes('세액합계'))break;const parsed=parseJoyCodeLine(s);if(parsed){flush();pending=parsed;if(parsed.edi)flush();continue}const tokens=s.split(/\s+/).map(normalizeMaterialCode).filter(Boolean);if(tokens.length===1){const one=tokens[0];if(pending&&!pending.edi&&isLikelyEdiCode(one)){pending.edi=one;flush();continue}if(pending&&!pending.uom&&isUom(one)){pending.uom=normalizeUom(one);continue}if(materialMasterLoaded?isInMaterialMaster(one):isLikelyProductCode(one)){flush();pending={itemCode:one,uom:'',edi:''};continue}}const onlyEdi=pickEdiFromTokens([s]);if(onlyEdi&&pending&&!pending.edi){pending.edi=onlyEdi;flush()}}flush();return arr}
-function parseJoyCodeLine(line){const tokens=normalizeItemText(line).split(/\s+/).map(normalizeMaterialCode).filter(Boolean);if(tokens.length<2)return null;let codeIdx=-1;if(materialMasterLoaded){for(let i=0;i<tokens.length;i++)if(isInMaterialMaster(tokens[i])){codeIdx=i;break}}if(codeIdx<0){for(let i=0;i<tokens.length;i++)if(isLikelyProductCode(tokens[i])){codeIdx=i;break}}if(codeIdx<0)return null;const itemCode=tokens[codeIdx];let uom='',uomIdx=-1;for(let i=codeIdx+1;i<tokens.length;i++)if(isUom(tokens[i])){uom=normalizeUom(tokens[i]);uomIdx=i;break}if(!uom)return{itemCode,uom:'',edi:''};let edi='';for(let i=tokens.length-1;i>uomIdx;i--)if(isLikelyEdiCode(tokens[i])){edi=tokens[i];break}return{itemCode,uom,edi}}
-function buildOutputRow(header,item,fileName,pageNo){const r={'거래일자':header.transactionDate||'','공급자명':normalizeCompanyName(header.supplierName||''),'공급자 사업자등록번호':header.supplierTaxId||'','납품처명':normalizeCompanyName(header.endUserName||''),'납품처 사업자등록번호':header.endUserTaxId||'','물품코드':item.materialCode||'','수량':item.qty??'','UOM':item.uom||'','EDI Code':item.edi||'','Source File':fileName,'Page':pageNo};const reasons=[];if(!r['거래일자'])reasons.push('거래일자 누락');if(!r['공급자명'])reasons.push('공급자명 누락');if(!r['공급자 사업자등록번호'])reasons.push('공급자 사업자등록번호 누락');if(!r['납품처명'])reasons.push('납품처명 누락');if(!r['납품처 사업자등록번호'])reasons.push('납품처 사업자등록번호 누락');if(!r['물품코드'])reasons.push('물품코드 누락 또는 Product Master 불일치');if(!r['수량'])reasons.push('수량 누락');if(!r['UOM'])reasons.push('UOM 누락');if(!r['EDI Code'])reasons.push('EDI Code 누락');if(!materialMasterLoaded)reasons.push('Product Master 미로드 - fallback 추출');r['Review Flag']=reasons.length?'Y':'N';r['Review Reason']=reasons.join('; ');return r}
-const drop=document.getElementById('drop'),fi=document.getElementById('fi'),masterFi=document.getElementById('masterFi');drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});drop.addEventListener('dragleave',()=>drop.classList.remove('over'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')))});fi.addEventListener('change',()=>addFiles([...fi.files]));masterFi.addEventListener('change',async()=>{const f=masterFi.files&&masterFi.files[0];if(!f)return;try{await loadProductMasterFile(f)}catch(e){console.error(e);alert('Product Master 파일을 읽는 중 오류가 발생했습니다.');masterMeta.textContent='로드 실패'}});
-function addFiles(arr){arr.forEach(f=>{if(!files.find(x=>x.name===f.name&&x.size===f.size))files.push(f)});renderFiles()}function removeFile(i){files.splice(i,1);renderFiles()}function renderFiles(){filesEl.innerHTML=''}
-const filesEl=document.getElementById('files');function renderFiles(){filesEl.innerHTML='';files.forEach((f,i)=>{const d=document.createElement('div');d.className='file';d.innerHTML=`<span class="file-ico">PDF</span><span class="file-name">${escapeHtml(f.name)}</span><span class="file-size">${(f.size/1024).toFixed(0)} KB</span><button class="file-x" onclick="removeFile(${i})">×</button>`;filesEl.appendChild(d)});filesEl.classList.toggle('on',files.length>0);run.disabled=files.length===0;meta1.textContent=files.length?`${files.length}개 선택됨`:'PDF · 여러 개 가능'}
-function say(msg,cls=''){consoleEl.classList.add('on');const d=document.createElement('div');d.className='c-line'+(cls?' c-'+cls:'');d.textContent=msg;consoleEl.appendChild(d);consoleEl.scrollTop=consoleEl.scrollHeight}const consoleEl=document.getElementById('console');function prog(pct,label=''){progEl.classList.add('on');if(pct!=null){progFill.style.width=pct+'%';progPct.textContent=pct+'%'}if(label)progLbl.textContent=label}const progEl=document.getElementById('prog');function toggleRaw(){const on=raw.classList.toggle('on');rawBtn.textContent=on?'원문 텍스트 숨기기':'원문 텍스트 보기'}
-async function runExtract(){if(!files.length)return;run.disabled=true;consoleEl.innerHTML='';results.style.display='none';raw.textContent='';rawBtn.style.display='none';meta2.textContent='처리 중…';rows=[];rawLines=[];docStats=[];try{const loaded=[];let totalPages=0;for(const f of files){const pages=await readPdfPages(f);loaded.push({file:f,pages});totalPages+=pages.length}say(`${files.length}개 파일 · 총 ${totalPages}페이지 처리 시작`,'hd');say(materialMasterLoaded?`Product Master 적용 중 — ${materialMasterSet.size.toLocaleString()}개 Material Code`:'Product Master가 로드되지 않았습니다. fallback 기준으로 추출합니다.',materialMasterLoaded?'ok':'warn');prog(0,'준비 중');let done=0;for(const pack of loaded){say(`\n📄 ${pack.file.name} (${pack.pages.length}페이지)`,'hd');let carry=blankHeader();for(const page of pack.pages){prog(Math.round(done/Math.max(totalPages,1)*95),`${pack.file.name} — p${page.pageNo}`);rawLines.push(`\n${'─'.repeat(54)}\n${pack.file.name} — p${page.pageNo}\n${'─'.repeat(54)}`,...page.lines.map(x=>x.text));carry=extractHeader(page,carry,pack.file.name);const before=rows.length;for(const item of parseItems(page)){const r=buildOutputRow(carry,item,pack.file.name,page.pageNo);if(r['거래일자']||r['물품코드']||r['수량']||r['UOM']||r['EDI Code'])rows.push(r)}const added=rows.length-before;docStats.push({file:pack.file.name,page:page.pageNo,itemCount:added});say(`p${page.pageNo}: ${added}개 품목`,added?'ok':'warn');done++}}prog(100,'완료');const flagged=rows.filter(r=>r['Review Flag']==='Y').length;say(`\n완료 — 총 ${rows.length}개 품목`,rows.length?'ok':'warn');if(flagged)say(`${flagged}개는 확인이 필요합니다`,'warn');if(!rows.length)say('추출된 품목이 없습니다. 원문 텍스트 보기에서 PDF 텍스트 구조를 확인하세요.','warn');meta2.textContent='완료';raw.textContent=rawLines.join('\n');rawBtn.style.display='block';renderResults(totalPages)}catch(e){console.error(e);say(`오류: ${e.message||e}`,'err');meta2.textContent='오류'}finally{run.disabled=false}}
-function renderResults(totalPages){const flagged=rows.filter(r=>r['Review Flag']==='Y').length,normal=rows.length-flagged;stats.innerHTML=`<div class="stat"><div class="stat-l">추출된 품목</div><div class="stat-v">${rows.length}<span class="u">개</span></div></div><div class="stat"><div class="stat-l">정상</div><div class="stat-v">${normal}<span class="u">개</span></div></div><div class="stat"><div class="stat-l">확인 필요</div><div class="stat-v">${flagged}<span class="u">개</span></div></div>`;const C=[['거래일자','mono'],['공급자명',''],['공급자 사업자등록번호','mono'],['납품처명',''],['납품처 사업자등록번호','mono'],['물품코드','mono'],['수량','num'],['UOM','mono'],['EDI Code','mono'],['Source File',''],['Page','num'],['Review Flag','']];const preview=rows.slice(0,300);meta3.textContent=`${rows.length}개`;tblNote.textContent=rows.length>300?`앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다`:`전체 ${rows.length}개`;let html='<table><thead><tr>';for(const [name]of C)html+=`<th>${escapeHtml(name)}</th>`;html+='</tr></thead><tbody>';for(const r of preview){const flag=r['Review Flag']==='Y';html+=`<tr class="${flag?'flag':''}">`;for(const [name,cls]of C){const v=r[name]==null?'':String(r[name]);if(name==='Review Flag')html+=flag?`<td><span class="pill pill-wn" title="${escapeHtml(r['Review Reason']||'')}">확인 필요</span></td>`:`<td><span class="pill pill-ok">정상</span></td>`;else html+=`<td class="${cls}${v?'':' dim'}" title="${escapeHtml(v)}">${v?escapeHtml(v):'—'}</td>`}html+='</tr>'}html+='</tbody></table>';tbl.innerHTML=html;results.style.display='block';results.scrollIntoView({behavior:'smooth',block:'start'})}
-function downloadXlsx(){if(!rows.length){alert('다운로드할 추출 결과가 없습니다.');return}const wb=XLSX.utils.book_new();const data=rows.map(r=>{const o={};for(const c of OUTPUT_COLUMNS)o[c]=r[c]??'';return o});const ws=XLSX.utils.json_to_sheet(data,{header:OUTPUT_COLUMNS});ws['!cols']=[{wch:14},{wch:24},{wch:22},{wch:24},{wch:22},{wch:24},{wch:10},{wch:10},{wch:18},{wch:34},{wch:8},{wch:12},{wch:55}];XLSX.utils.book_append_sheet(wb,ws,'전체');for(const eu of [...new Set(rows.map(r=>r['납품처명']||'미분류'))]){const subset=rows.filter(r=>(r['납품처명']||'미분류')===eu);let name=String(eu||'미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31)||'미분류';XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(subset.map(r=>{const o={};for(const c of OUTPUT_COLUMNS)o[c]=r[c]??'';return o}),{header:OUTPUT_COLUMNS}),name)}const today=new Date();XLSX.writeFile(wb,`invoice_extracted_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.xlsx`)}
-function resetAll(){files=[];rows=[];rawLines=[];docStats=[];fi.value='';renderFiles();consoleEl.innerHTML='';consoleEl.classList.remove('on');progEl.classList.remove('on');results.style.display='none';raw.classList.remove('on');rawBtn.style.display='none';meta2.textContent='대기 중';progFill.style.width='0%';progPct.textContent='0%';scrollTo({top:0,behavior:'smooth'})}
+const OUTPUT_COLUMNS=['Dealer Name','Dealer TAX ID','End User Name','End User TAX ID','Document No','Date','Material Desc','Material Code','Unit','Qty','EDI Code','Insurance Code','Source File','Review Flag','Review Reason'];
+let files=[],rows=[],rawLines=[],docStats=[];
+
+/* ═════ 검증된 멀티 양식 파서 (Node 테스트 통과분) ═════ */
+// ══════════════ 멀티 양식 파서 (테스트용) ══════════════
+const VALID_UNITS = new Set(['EA','BOX','SET','PK','PAC','DZ','DZN','BX','PACK']);
+const UNIT_CANON = { 'BX':'BOX', 'DZN':'DZ', 'PACK':'PAC' };  // 표준화
+const digitsOnly = s => (s||'').replace(/\D/g,'');
+const normSp = s => (s||'').replace(/\s+/g,' ').trim();
+const canonUnit = u => { const c=(u||'').toUpperCase().trim(); return UNIT_CANON[c]||c; };
+const isUnit = t => VALID_UNITS.has((t||'').toUpperCase().trim());
+const isInsCode = t => { const c=(t||'').trim(); return c==='비보험' || /^[BM]\d{6,}$/.test(c); };
+const isEdiCode = t => /^\d{2}[A-Z0-9]{4,}$/.test((t||'').trim());
+
+// ── 양식 감지 ──
+function detectFormat(lines){
+  const joined = lines.join('\n');
+  // 국립암센터(을): "거래명세서(을)" + "EDI코드"
+  if(joined.includes('거래명세서(을)') || (joined.includes('EDI코드') && joined.includes('계정'))) return 'NCC';
+  // 기쁨: "박스당" + "보험코드" 헤더
+  if(joined.includes('박스당') && joined.includes('보험코드')) return 'GIPPEUM';
+  // 세원 AMC: "물품코드" + "비 고" 헤더
+  if(joined.includes('물품코드') && (joined.includes('비 고')||joined.includes('비고'))) return 'SEWON';
+  // 부양메디칼: "(주)부양메디칼" 공급자 + 코드/규격/품명 헤더
+  if(joined.includes('부양메디칼')) return 'BUYANG';
+  return 'UNKNOWN';
+}
+
+// ── 헤더(공급자/납품처/문서번호/날짜) ──
+function extractHeader(lines, filename, fmt){
+  let docNo='', date='', supName='', supTax='', euName='', euTax='';
+  const joined = lines.join('\n');
+
+  // 날짜: YYYY.MM.DD 또는 YYYY-MM-DD 또는 YYYY년 M월 D일
+  for(const line of lines){
+    if(!date){
+      let m = line.match(/(20\d{2})[.\-](\d{1,2})[.\-](\d{1,2})/);
+      if(m){ date=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`; }
+      else {
+        m = line.match(/(20\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+        if(m) date=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+      }
+      // "MM월 DD일"만 있을 때 파일명/문서에서 연도 보충
+      if(!date){
+        const md = line.match(/(\d{1,2})월\s*(\d{1,2})일/);
+        if(md){
+          let year = '';
+          const fy = filename.match(/(20\d{2})/);
+          if(fy) year = fy[1];
+          else { const jy = joined.match(/(20\d{2})[.\-년]/); if(jy) year=jy[1]; }
+          if(year) date=`${year}-${md[1].padStart(2,'0')}-${md[2].padStart(2,'0')}`;
+        }
+      }
+    }
+    // 문서번호: "No : 61332" 또는 "141641 - 2" 또는 세금계산서번호
+    if(!docNo){
+      let m = line.match(/No\s*[:：]\s*(\d+)/i);
+      if(m) docNo=m[1];
+      else { m = line.match(/^(\d{5,6})\s*[-–]\s*(\d)\b/); if(m) docNo=`${m[1]}-${m[2]}`; }
+    }
+  }
+
+  // 사업자번호 (모든 XXX-XX-XXXXX 패턴 수집)
+  const taxIds=[];
+  for(const line of lines){
+    const ms = line.match(/\d{3}\s*-\s*\d{2}\s*-\s*\d{5}/g) || [];
+    for(const m of ms){ const d=digitsOnly(m); if(d.length===10 && !taxIds.includes(d)) taxIds.push(d); }
+  }
+  supTax = taxIds[0]||'';
+  euTax  = taxIds[1]||'';
+
+  // 상호명 — 양식별
+  // 공급자는 대부분 부양메디칼/세원메디
+  if(fmt==='BUYANG'){ supName='(주)부양메디칼'; }
+  else if(fmt==='SEWON'){ supName='주식회사 세원메디'; }
+  else if(fmt==='GIPPEUM'){ supName='㈜ 세원메디'; }
+  else if(fmt==='NCC'){ supName='(주)아산메디칼'; }
+
+  // 납품처(End User) 추출
+  const stripName = s => normSp(s)
+    .replace(/[(（]법인명[)）]/g,'')
+    .replace(/[(（]인[)）]/g,'')
+    .replace(/성\s*명.*$/,'')
+    .replace(/,.*$/,'')
+    .trim();
+
+  // 한 줄에 공급자/납품처가 모두 있는 양식(NCC/부양):
+  //   "상 호 [공급자?] 성 ... [받|급] 상 호 [납품처] 성"
+  //   공급자명이 다른 줄에 있어 비어있을 수 있으므로,
+  //   '급' 또는 '받' 구분자 오른쪽의 상호를 납품처로 우선 처리.
+  for(const line of lines){
+    if(!/상\s*호/.test(line)) continue;
+    // 구분자로 좌/우 분리: '받'(받는자)이 있으면 우선, 없으면 '급'
+    let sepIdx = line.search(/받\s*상\s*호/);
+    if(sepIdx < 0) sepIdx = line.search(/급\s*상\s*호/);
+    if(sepIdx >= 0){
+      const left  = line.slice(0, sepIdx);
+      const right = line.slice(sepIdx);
+      const lm = left.match(/상\s*호\s*(.+?)\s*성/);
+      const rm = right.match(/상\s*호\s*(.+?)\s*성/);
+      if(lm){ const nm=stripName(lm[1]); if(nm && !supName) supName=nm; }
+      if(rm){ const nm=stripName(rm[1]); if(nm && !euName)  euName=nm; }
+      if(euName) break;
+    } else {
+      // 구분자 없이 상호가 2번: 첫째 공급자, 둘째 납품처
+      const rx=/상\s*호\s*(.+?)\s*성/g; const found=[]; let mm;
+      while((mm=rx.exec(line))!==null){ const nm=stripName(mm[1]); if(nm) found.push(nm); }
+      if(found.length>=2){ if(!supName)supName=found[0]; if(!euName)euName=found[1]; break; }
+    }
+  }
+
+  // 여전히 없으면 전체에서 "상 호 ... 성명" 순서대로
+  if(!euName){
+    const rx=/상\s*호\s*(.*?)\s*성\s*명/g;
+    const names=[]; let m2;
+    while((m2=rx.exec(joined))!==null){ const nm=stripName(m2[1]); if(nm) names.push(nm); }
+    if(names.length>=2){ euName=names[1]; if(!supName) supName=names[0]; }
+    else if(names.length===1 && !supName){ supName=names[0]; }
+  }
+
+  // 기쁨: 올헬스 특수 (상호 다음줄에 회사명)
+  if(fmt==='GIPPEUM'){
+    const idx = lines.findIndex(l=>l.includes('주식회사') && l.includes('상'));
+    if(idx>=0 && lines[idx+1]) euName = normSp(lines[idx+1].replace(/소재지.*/,''))||euName;
+    if(joined.includes('올헬스')) euName='주식회사 올헬스';
+  }
+  // 세원 AMC: "거 래 병 원 서울아산병원"
+  if(fmt==='SEWON'){
+    const m = joined.match(/거\s*래\s*병\s*원\s+(\S+)/);
+    if(m) euName=m[1];
+  }
+
+  return {
+    'Dealer Name':supName, 'Dealer TAX ID':supTax,
+    'End User Name':euName, 'End User TAX ID':euTax,
+    'Document No':docNo, 'Date':date,
+  };
+}
+
+// ══════════════ 양식별 품목 파서 ══════════════
+
+// BUYANG: "코드 규격(병원명)품명 수량 단위 단가 공급가액"
+// 예: B0741001 VCP603H(이노엠앤씨)CTD VICRYL+ ANTIBACT VI 0 70 1 BOX 147,030 147,030
+function parseBuyang(lines){
+  const items=[];
+  let inTable=false;
+  for(const raw of lines){
+    const s=normSp(raw);
+    if(!s) continue;
+    if(/코\s*드.*규\s*격.*품.*명.*수\s*량/.test(s)){ inTable=true; continue; }
+    if(!inTable) continue;
+    if(/^Remark|합계금액|공급가액|세\s*액/.test(s)) { inTable=false; continue; }
+
+    // 계정코드(B/M+숫자)로 시작
+    const m = s.match(/^([BM]\d{6,})\s+(.+)$/);
+    if(!m) continue;
+    const insCode = m[1];
+    let rest = m[2];
+
+    // 뒤에서부터: ... 수량 단위 단가 공급가액  (VAT포함 등 제거)
+    rest = rest.replace(/<\s*VAT.*$/,'').trim();
+    // 금액들(콤마 숫자) 제거하고 수량+단위 추출
+    // 패턴: (품명...) (수량) (단위) (단가콤마) (금액콤마)
+    const qm = rest.match(/^(.+?)\s+(\d+)\s+(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\b/i);
+    if(!qm) continue;
+    let namePart = qm[1];
+    const qty = parseInt(qm[2],10);
+    const unit = canonUnit(qm[3]);
+
+    // namePart = "규격(병원명)품명" → 규격코드와 품명 분리
+    // 규격코드는 맨 앞 영숫자, (병원명) 괄호 제거
+    let matCode='', desc=namePart;
+    const codeM = namePart.match(/^([A-Za-z0-9]+)\s*[(（][^)）]*[)）]\s*(.*)$/);
+    if(codeM){ matCode=codeM[1]; desc=codeM[2]; }
+    else {
+      const codeM2 = namePart.match(/^([A-Za-z][A-Za-z0-9]{2,})\s+(.*)$/);
+      if(codeM2){ matCode=codeM2[1]; desc=codeM2[2]; }
+    }
+    items.push({
+      'Material Desc':normSp(desc),'Material Code':matCode,
+      'Unit':unit,'Qty':qty,'EDI Code':'','Insurance Code':insCode
+    });
+  }
+  return items;
+}
+
+// SEWON (AMC): 행번호 있음, 규격은 다음줄, 비고에 보험코드
+// "1 1025458 ENDO LOOP PDSⅡ EZ10G, EA 36 B2001101"  (또는 규격 다음줄)
+function parseSewon(lines){
+  const items=[];
+  let inTable=false;
+  for(let i=0;i<lines.length;i++){
+    const s=normSp(lines[i]);
+    if(!s) continue;
+    if(/번호.*물품코드.*품.*명.*단\s*위.*수량/.test(s)){ inTable=true; continue; }
+    if(!inTable) continue;
+    if(/^공급가액|합\s*계|^Remark/.test(s)) { if(items.length) inTable=false; continue; }
+
+    // 행: 번호 물품코드(7-8자리숫자) 품명... 단위 수량 [보험코드]
+    const m = s.match(/^(\d{1,3})\s+(\d{7,8})\s+(.+)$/);
+    if(!m) continue;
+    let rest=m[3];
+
+    // 보험코드(B/M+숫자) 뒤에서 추출
+    let insCode='';
+    const insM = rest.match(/\s([BM]\d{6,})\s*$/);
+    if(insM){ insCode=insM[1]; rest=rest.slice(0,insM.index).trim(); }
+
+    // 단위 수량 추출: "... EA 36" or "... PACK 12"
+    const uqM = rest.match(/\b(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\s+(\d+)\b/i);
+    let unit='',qty='',desc=rest;
+    if(uqM){
+      unit=canonUnit(uqM[1]); qty=parseInt(uqM[2],10);
+      desc = rest.slice(0, uqM.index).trim();
+    }
+    // desc 뒤 규격(콤마 포함, 예 "EZ10G,")는 남겨둠 → 규격 분리
+    let matCode='';
+    const specM = desc.match(/^(.*?)\s+([A-Z0-9]+),?\s*$/);
+    // 품명 뒤 규격코드 분리 시도
+    if(specM && /[A-Z]/.test(specM[2]) && /\d/.test(specM[2])){
+      matCode=specM[2].replace(/,$/,''); desc=specM[1].trim();
+    }
+    items.push({
+      'Material Desc':normSp(desc),'Material Code':matCode,
+      'Unit':unit,'Qty':qty,'EDI Code':'','Insurance Code':insCode
+    });
+  }
+  return items;
+}
+
+// GIPPEUM (기쁨): "NO 품명 박스당개수 품목코드 수량 단위 [단가 금액] 보험코드"
+// "1 ETHILON 3/0 36 W1685BH 8 BX 1,110 39,960 319,680 B0003001"
+// "2 PROLENE... 12 W8430G 5 DZN B0031001"  (금액 비어있음)
+function parseGippeum(lines){
+  const items=[];
+  let inTable=false;
+  for(const raw of lines){
+    const s=normSp(raw);
+    if(!s) continue;
+    if(/NO.*품\s*명.*품목코드.*수량.*단위.*보험코드/.test(s) || (/품목코드/.test(s)&&/보험코드/.test(s))){ inTable=true; continue; }
+    if(!inTable) continue;
+
+    // 행: NO(1-3) 품명... 박스당개수 품목코드 수량 단위 ... 보험코드(끝)
+    const m = s.match(/^(\d{1,3})\s+(.+)$/);
+    if(!m) continue;
+    let rest=m[2];
+
+    // 보험코드 뒤에서
+    let insCode='';
+    const insM = rest.match(/\s([BM]\d{6,})\s*$/);
+    if(insM){ insCode=insM[1]; rest=rest.slice(0,insM.index).trim(); }
+    else continue; // 보험코드 없으면 품목행 아님
+
+    // 품목코드 + 수량 + 단위 패턴: "품목코드 수량 단위"
+    //  품목코드는 영숫자(예: W1685BH, VCP823G, 8833H, MCS20)
+    const uqM = rest.match(/([A-Z0-9]{3,})\s+(\d+)\s+(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\b/i);
+    if(!uqM) continue;
+    const matCode=uqM[1];
+    const qty=parseInt(uqM[2],10);
+    const unit=canonUnit(uqM[3]);
+
+    // 품명 = 시작 ~ 품목코드 앞의 "박스당개수" 제외
+    let head = rest.slice(0, uqM.index).trim();
+    // head 끝의 박스당개수(숫자) 제거
+    head = head.replace(/\s+\d+\s*$/,'').trim();
+
+    items.push({
+      'Material Desc':normSp(head),'Material Code':matCode,
+      'Unit':unit,'Qty':qty,'EDI Code':'','Insurance Code':insCode
+    });
+  }
+  return items;
+}
+
+// NCC(을): 국립암센터 - 행번호, 계정 앞, EDI 다음줄, 규격/단위/수량
+function parseNcc(lines){
+  const grouped={}; let cur=null,inTable=false;
+  for(const raw of lines){
+    const s=normSp(raw); if(!s) continue;
+    const compact=s.replace(/\s+/g,'');
+    if(compact.includes('번호')&&compact.includes('물품명')){ inTable=true;cur=null;continue; }
+    if(!inTable) continue;
+    if(compact.includes('***검수***')||s.includes('합계금액')){ inTable=false;cur=null;continue; }
+    const rm=s.match(/^(\d{1,2})\s+(.+?)$/);
+    if(rm){ const n=parseInt(rm[1],10); if(n>=1&&n<=50){cur=n;grouped[cur]=[s];continue;} }
+    if(cur!==null) grouped[cur].push(s);
+  }
+  const items=[];
+  for(const n of Object.keys(grouped).map(Number).sort((a,b)=>a-b)){
+    const g=grouped[n];
+    const first=normSp(g[0]).replace(/^\d{1,2}\s+/,'');
+    const toks=first.split(/\s+/);
+    let ins='',rest=first;
+    if(isInsCode(toks[0])){ ins=toks[0]; rest=toks.slice(1).join(' '); }
+    let desc=rest,code='',unit='',qty='',edi='';
+    // "품명 규격 단위 수량"
+    const m=rest.match(/^(.+?)\s+([A-Z0-9]+)\s+(EA|BOX|SET|PK|PAC|DZ)\s+(\d+)$/i);
+    if(m){ desc=m[1];code=m[2];unit=canonUnit(m[3]);qty=parseInt(m[4],10); }
+    for(let i=1;i<g.length;i++){
+      const c=normSp(g[i]); if(!c) continue;
+      if(isEdiCode(c)){ edi=c; continue; }
+      const mm=c.match(/^(.+?)\s+([A-Z0-9]+)\s+(EA|BOX|SET|PK|PAC|DZ)\s+(\d+)$/i);
+      if(mm){ if(!code)code=mm[2]; if(!unit)unit=canonUnit(mm[3]); if(!qty)qty=parseInt(mm[4],10); if(desc===rest)desc=mm[1]; }
+    }
+    if(desc||code||qty) items.push({'Material Desc':normSp(desc),'Material Code':code,'Unit':unit,'Qty':qty,'EDI Code':edi,'Insurance Code':ins});
+  }
+  return items;
+}
+
+function parseItems(lines, fmt){
+  switch(fmt){
+    case 'BUYANG': return parseBuyang(lines);
+    case 'SEWON': return parseSewon(lines);
+    case 'GIPPEUM': return parseGippeum(lines);
+    case 'NCC': return parseNcc(lines);
+    default: return [];
+  }
+}
+
+
+/* ═════ PDF → 페이지별 lines (검증 스크립트와 동일) ═════ */
+async function readPdfPages(file){
+  const ab=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  const pages=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    const items=[];
+    for(const it of tc.items){
+      if(!it.str) continue;
+      const x=it.transform[4],y=it.transform[5];
+      const fs2=Math.max(Math.abs(it.transform[0]),Math.abs(it.transform[3]))||10;
+      const w=(it.width&&it.width>0)?it.width:fs2*it.str.length*0.55;
+      items.push({x,y,str:it.str,w,fs:fs2});
+    }
+    const out=[];
+    if(items.length){
+      items.sort((a,b)=>b.y-a.y||a.x-b.x);
+      const groups=[];
+      for(const it of items){
+        const tol=it.fs*0.5;let placed=false;
+        for(const g of groups){if(Math.abs(g.refY-it.y)<=tol){g.items.push(it);g.refY=g.items.reduce((s,i)=>s+i.y,0)/g.items.length;placed=true;break;}}
+        if(!placed) groups.push({refY:it.y,items:[it]});
+      }
+      groups.sort((a,b)=>b.refY-a.refY);
+      for(const g of groups){
+        g.items.sort((a,b)=>a.x-b.x);
+        let line='',pe=null,pf=10;
+        for(const it of g.items){if(pe!==null){const gap=it.x-pe;if(gap>Math.min(pf,it.fs)*0.25&&!line.endsWith(' '))line+=' ';}line+=it.str;pe=it.x+it.w;pf=it.fs;}
+        const t=line.replace(/\s+/g,' ').trim();
+        if(t) out.push(t);
+      }
+    }
+    pages.push(out);
+  }
+  return pages;
+}
+
+/* ═════ 합계금액(검증용) ═════ */
+function extractTotals(lines){
+  let totalAmount=null;const big=[];
+  for(const line of lines){
+    const nums=(line.match(/\d{1,3}(?:,\d{3})+/g)||[]).map(s=>parseInt(s.replace(/,/g,''),10));
+    for(const n of nums) if(n>=1000) big.push(n);
+    if(/합\s*계\s*액|합계금액/.test(line)&&nums.length) totalAmount=Math.max(...nums);
+  }
+  if(totalAmount===null&&big.length) totalAmount=Math.max(...big);
+  return {totalAmount};
+}
+
+/* ═════ 검수 ═════ */
+function buildReview(row){
+  const r=[];
+  const desc=String(row['Material Desc']||''),code=String(row['Material Code']||'');
+  const unit=String(row['Unit']||''),qty=row['Qty'],ins=String(row['Insurance Code']||'');
+  if(!row['Date']) r.push('Date missing');
+  if(!code) r.push('Material Code missing');
+  if(!unit) r.push('Unit missing');
+  if(qty===''||qty==null) r.push('Qty missing');
+  if(!ins) r.push('Insurance Code missing');
+  return {...row,'Review Flag':r.length?'Y':'N','Review Reason':r.join('; ')};
+}
+const hasVal=r=>String(r['Material Desc']||'').trim()!==''||String(r['Material Code']||'').trim()!==''||String(r['Unit']||'').trim()!==''||String(r['Qty']??'')!=='';
+
+/* ═════ UI ═════ */
+const drop=document.getElementById('drop'),fi=document.getElementById('fi');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles([...e.dataTransfer.files].filter(f=>f.type==='application/pdf'));});
+fi.addEventListener('change',()=>addFiles([...fi.files]));
+function addFiles(arr){arr.forEach(f=>{if(!files.find(x=>x.name===f.name&&x.size===f.size))files.push(f);});renderFiles();}
+function removeFile(i){files.splice(i,1);renderFiles();}
+function renderFiles(){
+  const el=document.getElementById('files');el.innerHTML='';
+  files.forEach((f,i)=>{const d=document.createElement('div');d.className='file';d.innerHTML=`<span class="file-ico">PDF</span><span class="file-name">${f.name}</span><span class="file-size">${(f.size/1024).toFixed(0)} KB</span><button class="file-x" onclick="removeFile(${i})" aria-label="제거">✕</button>`;el.appendChild(d);});
+  el.classList.toggle('on',files.length>0);
+  document.getElementById('run').disabled=files.length===0;
+  document.getElementById('meta1').textContent=files.length?`${files.length}개 선택됨`:'PDF · 여러 개 가능';
+}
+function say(msg,cls=''){const c=document.getElementById('console');c.classList.add('on');const d=document.createElement('div');d.className='c-line'+(cls?' c-'+cls:'');d.textContent=msg;c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function prog(pct,label=''){document.getElementById('prog').classList.add('on');if(pct!=null){document.getElementById('progFill').style.width=pct+'%';document.getElementById('progPct').textContent=pct+'%';}if(label)document.getElementById('progLbl').textContent=label;}
+function toggleRaw(){const r=document.getElementById('raw');const on=r.classList.toggle('on');document.getElementById('rawBtn').textContent=on?'원문 텍스트 숨기기':'원문 텍스트 보기';}
+
+const FMT_LABEL={BUYANG:'부양메디칼',SEWON:'세원메디(AMC)',GIPPEUM:'기쁨병원',NCC:'국립암센터(을)',UNKNOWN:'미인식'};
+
+async function runExtract(){
+  if(!files.length) return;
+  const btn=document.getElementById('run');btn.disabled=true;
+  document.getElementById('console').innerHTML='';
+  document.getElementById('results').style.display='none';
+  document.getElementById('raw').textContent='';
+  document.getElementById('rawBtn').style.display='none';
+  document.getElementById('meta2').textContent='처리 중…';
+  rows=[];rawLines=[];docStats=[];
+
+  let totalPages=0;const loaded=[];
+  for(const f of files){const pages=await readPdfPages(f);loaded.push({f,pages});totalPages+=pages.length;}
+  say(`${files.length}개 파일 · 총 ${totalPages}페이지 처리 시작`,'hd');
+  prog(0,'준비 중');
+  let done=0;
+
+  for(const {f,pages} of loaded){
+    let allLines=[];pages.forEach(p=>allLines.push(...p));
+    const fileFmt=detectFormat(allLines);
+    say(`\n📄 ${f.name} — 양식: ${FMT_LABEL[fileFmt]||fileFmt}`,'hd');
+
+    for(let pi=0;pi<pages.length;pi++){
+      const lines=pages[pi];
+      prog(Math.round(done/totalPages*95),`${f.name} — ${pi+1}/${pages.length}`);
+      rawLines.push(`\n${'─'.repeat(54)}\n${f.name} — p${pi+1} [${fileFmt}]\n${'─'.repeat(54)}`);
+      rawLines.push(...lines);
+      if(!lines.filter(l=>l).length){done++;continue;}
+
+      const fmt = (detectFormat(lines)==='UNKNOWN')?fileFmt:detectFormat(lines);
+      const h=extractHeader(lines,f.name,fmt);
+      const totals=extractTotals(lines);
+      const items=parseItems(lines,fmt);
+      const valid=items.map(it=>({...h,...it,'EDI Code':it['EDI Code']||'','Source File':f.name})).filter(hasVal).map(buildReview);
+
+      if(h['Document No']||valid.length){
+        docStats.push({file:f.name,page:pi+1,fmt,docNo:h['Document No']||`(p${pi+1})`,itemCount:valid.length,totalAmount:totals.totalAmount});
+      }
+      rows.push(...valid);
+      done++;
+    }
+  }
+
+  prog(100,'완료');
+  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
+  say(`\n완료 — 총 ${rows.length}개 품목`,'ok');
+  if(flagged) say(`${flagged}개는 확인이 필요합니다`,'warn');
+  if(!rows.length) say('추출된 품목이 없습니다. 원문 텍스트를 확인해 보세요.','warn');
+
+  document.getElementById('meta2').textContent='완료';
+  document.getElementById('raw').textContent=rawLines.join('\n');
+  document.getElementById('rawBtn').style.display='block';
+  renderResults(totalPages);
+  btn.disabled=false;
+}
+
+/* ═════ 검증 리포트 ═════ */
+function buildVerification(totalPages){
+  const checks=[];
+  const pagesWithData=docStats.length;
+  checks.push({name:'페이지 판독',status:pagesWithData===totalPages?'ok':(pagesWithData===0?'no':'no'),
+    detail:`전체 ${totalPages}페이지 중 <span class="mono">${pagesWithData}</span>페이지에서 데이터를 읽었습니다.`+(pagesWithData<totalPages?` 나머지는 빈 페이지이거나 텍스트가 없습니다.`:'')});
+
+  const fmts=[...new Set(docStats.map(d=>d.fmt))];
+  checks.push({name:'양식 자동 인식',status:fmts.length&&!fmts.includes('UNKNOWN')?'ok':'no',
+    detail:`인식된 양식: <span class="mono">${fmts.map(x=>FMT_LABEL[x]||x).join(', ')||'없음'}</span>`});
+
+  const contradictions=docStats.filter(d=>d.totalAmount&&d.totalAmount>0&&d.itemCount===0);
+  const withTotal=docStats.filter(d=>d.totalAmount&&d.totalAmount>0).length;
+  checks.push({name:'합계액 교차검증',status:contradictions.length===0?(withTotal>0?'ok':'na'):'no',
+    detail:withTotal===0?'합계금액 라인을 찾지 못해 이 검사는 건너뜁니다.':
+      contradictions.length===0?`합계금액이 있는 ${withTotal}페이지 모두 품목이 정상 추출되었습니다.`:
+      `합계금액은 있으나 품목이 0개인 페이지 ${contradictions.length}건 — 표 인식 실패 의심:<br>`+contradictions.slice(0,5).map(d=>`· <span class="mono">${d.docNo}</span>`).join('<br>')});
+
+  const fieldCheck=['Document No','Date','Dealer Name','End User Name','Material Desc','Material Code','Unit','Qty','Insurance Code'];
+  const fieldRates=fieldCheck.map(col=>{const filled=rows.filter(r=>String(r[col]??'').trim()!=='').length;const pct=rows.length?Math.round(filled/rows.length*100):0;return {col,pct};});
+  return {checks,fieldRates};
+}
+function renderVerification(totalPages){
+  const {checks,fieldRates}=buildVerification(totalPages);
+  const failed=checks.filter(c=>c.status==='no').length;
+  const allPass=failed===0;
+  const head=`<div class="verify-head ${allPass?'pass':'warn'}"><div class="verify-badge">${allPass?'✓':'!'}</div><div><div class="verify-title">${allPass?'검증 통과 — 눈으로 대조하지 않아도 됩니다':`검증 주의 — ${failed}개 항목 확인 필요`}</div><div class="verify-sub">${allPass?'아래 자동 검사를 모두 통과했습니다.':'아래에서 주의 표시된 항목을 확인하세요.'}</div></div></div>`;
+  let body='<div class="verify-body">';
+  for(const c of checks){
+    const mk=c.status==='ok'?'<div class="check-mark ok">✓</div>':c.status==='na'?'<div class="check-mark na">–</div>':'<div class="check-mark no">!</div>';
+    body+=`<div class="check">${mk}<div class="check-body"><div class="check-name">${c.name}</div><div class="check-detail">${c.detail}</div></div></div>`;
+  }
+  let bars='<div class="fieldbars">';
+  for(const f of fieldRates){const color=f.pct>=90?'var(--accent)':f.pct>=60?'var(--warn)':'var(--err)';bars+=`<div class="fb"><span class="fb-name">${f.col}</span><div class="fb-track"><div class="fb-fill" style="width:${f.pct}%;background:${color}"></div></div><span class="fb-pct">${f.pct}%</span></div>`;}
+  bars+='</div>';
+  body+=`<div class="check"><div class="check-mark ${fieldRates.every(f=>f.pct>=60)?'ok':'no'}">${fieldRates.every(f=>f.pct>=60)?'✓':'!'}</div><div class="check-body"><div class="check-name">필드별 추출률</div><div class="check-detail">각 컬럼이 몇 %나 채워졌는지입니다. 낮은 항목은 파싱이 약한 부분입니다.</div>${bars}</div></div></div>`;
+  document.getElementById('verify').innerHTML=head+body;
+}
+
+function renderResults(totalPages){
+  renderVerification(totalPages);
+  const flagged=rows.filter(r=>r['Review Flag']==='Y').length;
+  const clean=rows.length-flagged;
+  document.getElementById('stats').innerHTML=`<div class="stat"><div class="stat-l">추출된 품목</div><div class="stat-v">${rows.length}<span class="u">개</span></div></div><div class="stat ok"><div class="stat-l">정상</div><div class="stat-v">${clean}<span class="u">개</span></div></div><div class="stat ${flagged?'warn':'ok'}"><div class="stat-l">확인 필요</div><div class="stat-v">${flagged}<span class="u">개</span></div></div>`;
+  const C=[['Document No','mono'],['Date','mono'],['Dealer Name',''],['End User Name',''],['Material Desc',''],['Material Code','mono'],['Insurance Code','mono'],['Unit','mono'],['Qty','num'],['Review Flag','']];
+  const pv=rows.slice(0,300);
+  document.getElementById('meta3').textContent=`${rows.length}개`;
+  document.getElementById('tblNote').textContent=rows.length>300?`앞 300개만 표시 — 엑셀에는 전체 ${rows.length}개가 담깁니다`:`전체 ${rows.length}개`;
+  let h='<table><thead><tr>';for(const [n] of C) h+=`<th>${n}</th>`;h+='</tr></thead><tbody>';
+  for(const r of pv){
+    const flag=r['Review Flag']==='Y';h+=`<tr class="${flag?'flag':''}">`;
+    for(const [n,cls] of C){const v=r[n]==null?'':String(r[n]);
+      if(n==='Review Flag') h+=flag?`<td><span class="pill pill-wn" title="${(r['Review Reason']||'').replace(/"/g,'&quot;')}">확인 필요</span></td>`:`<td><span class="pill pill-ok">정상</span></td>`;
+      else h+=`<td class="${cls}${v?'':' dim'}" title="${v.replace(/"/g,'&quot;')}">${v||'—'}</td>`;
+    }
+    h+='</tr>';
+  }
+  h+='</tbody></table>';
+  document.getElementById('tbl').innerHTML=h;
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function downloadXlsx(){
+  if(!rows.length) return;
+  const wb=XLSX.utils.book_new();
+  const sheet=data=>XLSX.utils.json_to_sheet(data.map(r=>{const o={};for(const c of OUTPUT_COLUMNS)o[c]=r[c]??'';return o;}),{header:OUTPUT_COLUMNS});
+  XLSX.utils.book_append_sheet(wb,sheet(rows),'전체');
+  const eus=[...new Set(rows.map(r=>r['End User Name']||'미분류'))];
+  const used=new Set(['전체']);
+  for(const eu of eus){let sn=(eu||'미분류').replace(/[:\\/?*\[\]]/g,'').trim().slice(0,31)||'미분류';let base=sn,n=2;while(used.has(sn)){sn=base.slice(0,28)+'_'+n;n++;}used.add(sn);XLSX.utils.book_append_sheet(wb,sheet(rows.filter(r=>(r['End User Name']||'미분류')===eu)),sn);}
+  XLSX.writeFile(wb,'merged_receipts_extracted.xlsx');
+}
+
+function resetAll(){
+  files=[];rows=[];rawLines=[];docStats=[];fi.value='';
+  renderFiles();
+  document.getElementById('console').innerHTML='';document.getElementById('console').classList.remove('on');
+  document.getElementById('prog').classList.remove('on');
+  document.getElementById('results').style.display='none';
+  document.getElementById('raw').classList.remove('on');
+  document.getElementById('rawBtn').style.display='none';
+  document.getElementById('meta2').textContent='대기 중';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 </script>
 </body>
 </html>
