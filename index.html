@@ -679,7 +679,7 @@ td.dim{
 <div class="wrap">
   <div class="hero">
     <h1>PDF를 엑셀 원장으로</h1>
-    <p>거래일자 자동 보정, Product Master F열 Material code 매칭, 국립암센터 사업자번호 보정, 세원메디-올헬스 수량/단가 보정을 포함합니다.</p>
+    <p>거래일자 자동 보정, Product Master F열 Material code 매칭, 국립암센터 사업자번호 보정, 세원메디-올헬스 수량 보정을 포함합니다.</p>
   </div>
 
   <div class="card">
@@ -995,7 +995,8 @@ function isLikelyProductCode(s){
     /^SX[A-Z0-9]+$/i.test(t) ||
     /^GST\d+[A-Z]?$/i.test(t) ||
     /^ECR\d+[A-Z]?$/i.test(t) ||
-    /^EZ\d+[A-Z]?$/i.test(t)
+    /^EZ\d+[A-Z]?$/i.test(t) ||
+    /^\d{4}[A-Z]$/i.test(t)
   );
 }
 
@@ -1341,9 +1342,6 @@ function extractHeader(page, previousHeader, fileName){
   if(!cur.endUserName && noSpace.includes('국립암센타')) cur.endUserName = '국립암센타';
   if(!cur.endUserName && noSpace.includes('국립암센터')) cur.endUserName = '국립암센터';
 
-  // 세원메디 - 올헬스 거래명세서 전용
-  // 공급자 = 주식회사 세원메디
-  // 납품처 = 주식회사 올헬스
   if(
     noSpace.includes('주식회사올헬스') ||
     noSpace.includes('올헬스') ||
@@ -1389,9 +1387,6 @@ function extractHeader(page, previousHeader, fileName){
 function isJoyHospitalLike(page){
   const text = compact(page.lines.map(x => x.text).join(' '));
 
-  // 중요:
-  // '세원메디'만으로 기쁨병원 판단하지 않음.
-  // AMC도 세원메디가 있으므로 오인식 방지.
   return (
     text.includes('주식회사올헬스') ||
     text.includes('올헬스') ||
@@ -1625,8 +1620,6 @@ function parseGroupToRegularItem(groupLines){
 function parseItems(page){
 
   if(isJoyHospitalLike(page)){
-    // 기쁨병원/올헬스 문서는 일반 parser로 fallback하지 않음.
-    // fallback하면 하단 코드표의 단가를 수량으로 오인식할 수 있음.
     return parseJoyHospitalSeparatedTables(page);
   }
 
@@ -1801,19 +1794,6 @@ function parseLooseRegularItems(lines){
   return items;
 }
 
-function isJoyNameTableHeader(line){
-  const c = compact(line);
-
-  return (
-    c.includes('NO품명박스당') ||
-    c.includes('품명박스당') ||
-    c.includes('O품명') ||
-    c.includes('개수수량EA') ||
-    c.includes('수량EA') ||
-    c.includes('단가')
-  );
-}
-
 function isJoyMaterialCodeLine(line){
   const tokens = normalizeItemText(line)
     .split(/\s+/)
@@ -1845,40 +1825,14 @@ function isJoyMaterialCodeLine(line){
   return hasMaterialCode && hasUom && (hasEdi || hasCommaPrice);
 }
 
-function shouldStopJoyNameTable(line){
-  const c = compact(line);
-
-  if(!line) return false;
-  if(isJoyMaterialCodeLine(line)) return true;
-  if(isCodeTableHeader(line)) return true;
-
-  if(c.includes('전자세금계산서')) return true;
-  if(c.includes('입금계좌')) return true;
-  if(c.includes('예금주')) return true;
-  if(c.includes('거래처명')) return true;
-  if(c.includes('물품인수확인란')) return true;
-  if(c.includes('세액합계')) return true;
-
-  return false;
-}
-
-function extractJoyQtyFromTokens(tokens){
-
+function extractJoyQtyFromLineBody(body){
   const nums = [];
+  const tokens = String(body || '').split(/\s+/).map(clean).filter(Boolean);
 
   for(const t of tokens){
-
     if(/^\d+\-\d+$/.test(t)){
       const parts = t.split('-');
       return toQty(parts[1]);
-    }
-
-    if(/^\d+$/.test(t)){
-      nums.push({
-        value:Number(t),
-        hasComma:false
-      });
-      continue;
     }
 
     if(/^\d{1,3}(,\d{3})+$/.test(t)){
@@ -1888,6 +1842,13 @@ function extractJoyQtyFromTokens(tokens){
       });
       continue;
     }
+
+    if(/^\d+$/.test(t)){
+      nums.push({
+        value:Number(t),
+        hasComma:false
+      });
+    }
   }
 
   if(!nums.length) return '';
@@ -1895,12 +1856,12 @@ function extractJoyQtyFromTokens(tokens){
   const commaIndex = nums.findIndex(x => x.hasComma);
 
   if(commaIndex >= 0){
-    const before = nums
+    const beforePrice = nums
       .slice(0, commaIndex)
       .filter(x => !x.hasComma);
 
-    if(before.length){
-      return before[before.length - 1].value;
+    if(beforePrice.length){
+      return beforePrice[beforePrice.length - 1].value;
     }
   }
 
@@ -1947,22 +1908,22 @@ function removeJoyNumericTailForDesc(tokens){
 function parseJoyHospitalSeparatedTables(page){
 
   const lines = page.lines.map(x => x.text);
-
   const nameRows = parseJoyNameQtyTable(lines);
   const codeRows = parseJoyCodeTable(lines);
 
-  if(!codeRows.length) return [];
+  console.log('[JOY] nameRows', nameRows);
+  console.log('[JOY] codeRows', codeRows);
 
-  const count = Math.min(
-    nameRows.length || codeRows.length,
-    codeRows.length
-  );
+  if(!nameRows.length || !codeRows.length){
+    return [];
+  }
 
+  const count = Math.min(nameRows.length, codeRows.length);
   const out = [];
 
   for(let i = 0; i < count; i++){
-    const n = nameRows[i] || {};
-    const c = codeRows[i] || {};
+    const n = nameRows[i];
+    const c = codeRows[i];
 
     out.push({
       rowNo: n.rowNo || i + 1,
@@ -1986,7 +1947,7 @@ function parseJoyHospitalSeparatedTables(page){
 function parseJoyNameQtyTable(lines){
 
   const arr = [];
-  let headerFound = false;
+  let inQtyTable = false;
 
   for(let idx = 0; idx < lines.length; idx++){
 
@@ -1994,29 +1955,51 @@ function parseJoyNameQtyTable(lines){
     const s = normalizeItemText(raw);
     const c = compact(s);
 
-    if(!headerFound && isJoyNameTableHeader(s)){
-      headerFound = true;
+    if(!inQtyTable){
+      if(
+        c.includes('NO품명박스당') ||
+        c.includes('품명박스당') ||
+        c.includes('개수수량EA') ||
+        c.includes('수량EA') ||
+        c.includes('단가')
+      ){
+        inQtyTable = true;
+        continue;
+      }
+
       continue;
     }
 
-    if(!headerFound) continue;
+    if(isJoyMaterialCodeLine(s)){
+      break;
+    }
 
-    if(shouldStopJoyNameTable(s)) break;
+    if(c.includes('전자세금계산서')) break;
+    if(c.includes('입금계좌')) break;
+    if(c.includes('예금주')) break;
+    if(c.includes('거래처명')) break;
+    if(c.includes('세액합계')) break;
     if(isTableEnd(s)) break;
 
-    const m = s.match(/^(\d+)\s+(.*)$/);
+    const m = s.match(/^(\d{1,4})\s+(.+)$/);
 
-    if(!m) continue;
+    if(!m){
+      continue;
+    }
 
     const rowNo = Number(m[1]);
     const body = m[2];
+
+    if(!body || !/[A-Za-z가-힣]/.test(body)){
+      continue;
+    }
 
     const tokens = body
       .split(/\s+/)
       .map(clean)
       .filter(Boolean);
 
-    const qty = extractJoyQtyFromTokens(tokens);
+    const qty = extractJoyQtyFromLineBody(body);
     const descTokens = removeJoyNumericTailForDesc(tokens);
     const desc = clean(descTokens.join(' '));
 
@@ -2304,40 +2287,6 @@ function renderFiles(){
   document.getElementById('run').disabled = files.length === 0;
   document.getElementById('meta1').textContent =
     files.length ? `${files.length}개 선택됨` : 'PDF · 여러 개 가능';
-}
-
-function renderMasterFile(file){
-  const el = document.getElementById('masterFiles');
-  el.innerHTML = '';
-
-  if(!file){
-    el.classList.remove('on');
-    return;
-  }
-
-  const d = document.createElement('div');
-  d.className = 'file';
-
-  d.innerHTML =
-    `<span class="file-ico master">XLSX</span>
-     <span class="file-name">${escapeHtml(file.name)}</span>
-     <span class="file-size">${(file.size/1024).toFixed(0)} KB</span>
-     <button class="file-x" onclick="clearMaster()" aria-label="제거">×</button>`;
-
-  el.appendChild(d);
-  el.classList.add('on');
-}
-
-function clearMaster(){
-  materialMasterSet = new Set();
-  materialMasterList = [];
-  materialMasterLoaded = false;
-  masterFileName = '';
-
-  document.getElementById('masterFi').value = '';
-  document.getElementById('masterMeta').textContent = '선택 안 됨';
-
-  renderMasterFile(null);
 }
 
 function say(msg, cls=''){
