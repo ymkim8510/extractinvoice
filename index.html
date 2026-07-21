@@ -429,13 +429,9 @@ function parseBuyang(lines){
 // SEWON (AMC): 행번호 있음, 규격은 다음줄, 비고에 보험코드
 // "1 1025458 ENDO LOOP PDSⅡ EZ10G, EA 36 B2001101"  (또는 규격 다음줄)
 function parseSewon(lines){
-  const items=[];
+  const rawItems=[];
   let inTable=false;
-  // 규격 열 규칙: "코드, 부가정보" (콤마 앞이 제품코드)
-  //  - 같은 줄: "품명 EZ10G, EA 36 ..." → 콤마 앞 EZ10G가 코드
-  //  - 다음 줄로 밀림: 품목 행 위에 "EZ10G," 만 떠 있음
-  // 규격조각(콤마로 끝나는 코드) 판별
-  const isSpecFrag = t => /^[A-Za-z0-9]+,$/.test(t);   // 반드시 콤마로 끝남 (예: "EZ10G,")
+  const isSpecFrag = t => /^[A-Za-z0-9]+,/.test(t) || /^[A-Za-z0-9]+,$/.test(t); // "W737,40mm" or "W205,"
   let pendingSpec = '';
 
   for(let i=0;i<lines.length;i++){
@@ -443,49 +439,81 @@ function parseSewon(lines){
     if(!s) continue;
     if(/번호.*물품코드.*품.*명.*단\s*위.*수량/.test(s)){ inTable=true; pendingSpec=''; continue; }
     if(!inTable) continue;
-    if(/^공급가액|합\s*계|^Remark/.test(s)){ if(items.length) inTable=false; continue; }
+    if(/^공급가액|합\s*계|^Remark/.test(s)){ if(rawItems.length) inTable=false; continue; }
 
-    // 품목 행: 번호 물품코드(7-8자리) 나머지
-    const m = s.match(/^(\d{1,3})\s+(\d{7,8})\s+(.+)$/);
+    const m = s.match(/^(\d{1,3})\s+(\d{7,8})\s+(.*)$/);
     if(!m){
-      // 품목 행이 아니면: "코드," 형태의 규격조각이면 pending에 저장
-      if(isSpecFrag(s)) pendingSpec = s.replace(/,$/,'');
-      else pendingSpec = '';   // "45cm" 등 부가정보 줄은 무시
+      // 품목 행 아님: 규격조각(콤마 포함 코드)이면 저장
+      if(isSpecFrag(s)){ pendingSpec = s.split(',')[0].trim(); }
       continue;
     }
 
-    let rest=m[3];
-    // 보험코드(B/M+숫자) 뒤에서 추출
+    const rowNo=parseInt(m[1],10);
+    const mulpum=m[2];
+    let rest=m[3].trim();
+
+    // 보험코드/비보험 뒤에서
     let insCode='';
-    const insM = rest.match(/\s([BM]\d{6,})\s*$/);
-    if(insM){ insCode=insM[1]; rest=rest.slice(0,insM.index).trim(); }
+    const insM = rest.match(/\s*(비보험|[BM]\d{6,})\s*$/);
+    if(insM){ insCode=insM[1]==='비보험'?'':insM[1]; rest=rest.slice(0,insM.index).trim(); }
 
     // 단위 수량
-    const uqM = rest.match(/\b(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\s+(\d+)\b/i);
+    const uqM = rest.match(/\b(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\s+(\d+)\s*$/i);
     let unit='',qty='',beforeUnit=rest;
     if(uqM){ unit=canonUnit(uqM[1]); qty=parseInt(uqM[2],10); beforeUnit=rest.slice(0,uqM.index).trim(); }
 
-    // beforeUnit = "품명 [코드,]"  → 콤마 앞이 코드
-    // 규칙: 맨 끝 토큰이 "코드," 형태면 그게 규격코드, 아니면 다음줄 pending에서 보충
+    // beforeUnit 끝에 붙은 규격코드 분리
     let matCode='', desc=beforeUnit;
-    const tailComma = beforeUnit.match(/^(.*?)\s+([A-Za-z0-9]+),\s*$/);   // "...  EZ10G,"
-    const tailNoComma = beforeUnit.match(/^(.*?)\s+([A-Za-z][A-Za-z0-9]{2,})\s*$/); // 콤마 없이 붙은 코드
-    if(tailComma){
-      matCode=tailComma[2]; desc=tailComma[1].trim();
-    } else if(pendingSpec){
-      matCode=pendingSpec; desc=beforeUnit.trim();
-    } else if(tailNoComma && /\d/.test(tailNoComma[2])){
-      // 콤마는 없지만 품명 뒤 영숫자코드가 붙은 경우
-      matCode=tailNoComma[2]; desc=tailNoComma[1].trim();
+    // 규격코드 판별: 영문시작 + 숫자 포함 + 제품명 토큰이 아님
+    //  제품명 토큰 예외: "4-0","2-0","#1","[4등급]" 등은 코드 아님
+    const looksLikeSpecCode = t => {
+      if(!/^[A-Za-z]/.test(t)) return false;      // 영문 시작
+      if(!/\d/.test(t)) return false;             // 숫자 포함
+      if(/^\d+-\d+$/.test(t)) return false;       // "4-0" 형태 아님
+      if(t.length<3) return false;
+      return /^[A-Za-z][A-Za-z0-9]{2,}$/.test(t);  // 영숫자 조합
+    };
+    // 케이스1: "품명 697G,11mm" 또는 "품명 W737,40mm" → 콤마 앞이 코드 (숫자시작 허용)
+    let cm = beforeUnit.match(/^(.*?)\s+([A-Za-z0-9]+),\S*\s*$/);
+    if(cm && /[A-Za-z]/.test(cm[2]) && /\d/.test(cm[2]) && !/^\d+-\d+$/.test(cm[2])){ matCode=cm[2]; desc=cm[1].trim(); }
+    else {
+      // 케이스2: "품명 W205," (콤마로 끝남, 숫자시작 허용)
+      cm = beforeUnit.match(/^(.*?)\s+([A-Za-z0-9]+),\s*$/);
+      if(cm && /[A-Za-z]/.test(cm[2]) && /\d/.test(cm[2]) && !/^\d+-\d+$/.test(cm[2])){ matCode=cm[2]; desc=cm[1].trim(); }
+      else {
+        const toks=beforeUnit.split(/\s+/);
+        const last=toks[toks.length-1];
+        // 케이스3: "품명 EPS02/EPS" → 맨끝 토큰이 "코드/부가" 형태면 / 앞이 코드
+        //  (품명 중간의 PROB/SPATULA 등은 맨끝 토큰이 아니므로 안전)
+        const slashM = last.match(/^([A-Za-z0-9]+)\/[A-Za-z0-9]*$/);
+        if(toks.length>=2 && slashM && /[A-Za-z]/.test(slashM[1]) && /\d/.test(slashM[1])){
+          matCode=slashM[1]; desc=toks.slice(0,-1).join(' ').trim();
+        }
+        // 케이스4: "품명 SXMP1B435" (콤마·슬래시 없이 desc 끝 코드)
+        else if(toks.length>=2 && looksLikeSpecCode(last)){
+          matCode=last; desc=toks.slice(0,-1).join(' ').trim();
+        }
+      }
     }
-    pendingSpec='';
 
-    items.push({
-      'Material Desc':normSp(desc),'Material Code':matCode,
-      'Unit':unit,'Qty':qty,'EDI Code':'','Insurance Code':insCode
-    });
+    rawItems.push({rowNo,mulpum,desc:normSp(desc),matCode,unit,qty,insCode,pendingSpec});
+    pendingSpec='';
   }
-  return items;
+
+  // 2차 보정: 같은 물품코드(mulpum)를 가진 다른 행에서 규격코드 공유
+  const codeByMulpum={};
+  for(const it of rawItems){ if(it.matCode && !codeByMulpum[it.mulpum]) codeByMulpum[it.mulpum]=it.matCode; }
+  for(const it of rawItems){
+    if(!it.matCode){
+      if(it.pendingSpec) it.matCode=it.pendingSpec;
+      else if(codeByMulpum[it.mulpum]) it.matCode=codeByMulpum[it.mulpum];
+    }
+  }
+
+  return rawItems.map(it=>({
+    'Material Desc':it.desc,'Material Code':it.matCode,
+    'Unit':it.unit,'Qty':it.qty,'EDI Code':'','Insurance Code':it.insCode
+  }));
 }
 
 // GIPPEUM (기쁨): "NO 품명 박스당개수 품목코드 수량 단위 [단가 금액] 보험코드"
@@ -534,35 +562,57 @@ function parseGippeum(lines){
 
 // NCC(을): 국립암센터 - 행번호, 계정 앞, EDI 다음줄, 규격/단위/수량
 function parseNcc(lines){
-  const grouped={}; let cur=null,inTable=false;
-  for(const raw of lines){
-    const s=normSp(raw); if(!s) continue;
-    const compact=s.replace(/\s+/g,'');
-    if(compact.includes('번호')&&compact.includes('물품명')){ inTable=true;cur=null;continue; }
-    if(!inTable) continue;
-    if(compact.includes('***검수***')||s.includes('합계금액')){ inTable=false;cur=null;continue; }
-    const rm=s.match(/^(\d{1,2})\s+(.+?)$/);
-    if(rm){ const n=parseInt(rm[1],10); if(n>=1&&n<=50){cur=n;grouped[cur]=[s];continue;} }
-    if(cur!==null) grouped[cur].push(s);
-  }
+  // NCC(국립암센터 을) 구조:
+  //   품명(별도 줄)
+  //   번호 계정 규격코드 단위 수량
+  //   EDI코드(별도 줄)
   const items=[];
-  for(const n of Object.keys(grouped).map(Number).sort((a,b)=>a-b)){
-    const g=grouped[n];
-    const first=normSp(g[0]).replace(/^\d{1,2}\s+/,'');
-    const toks=first.split(/\s+/);
-    let ins='',rest=first;
-    if(isInsCode(toks[0])){ ins=toks[0]; rest=toks.slice(1).join(' '); }
-    let desc=rest,code='',unit='',qty='',edi='';
-    // "품명 규격 단위 수량"
-    const m=rest.match(/^(.+?)\s+([A-Z0-9]+)\s+(EA|BOX|SET|PK|PAC|DZ)\s+(\d+)$/i);
-    if(m){ desc=m[1];code=m[2];unit=canonUnit(m[3]);qty=parseInt(m[4],10); }
-    for(let i=1;i<g.length;i++){
-      const c=normSp(g[i]); if(!c) continue;
-      if(isEdiCode(c)){ edi=c; continue; }
-      const mm=c.match(/^(.+?)\s+([A-Z0-9]+)\s+(EA|BOX|SET|PK|PAC|DZ)\s+(\d+)$/i);
-      if(mm){ if(!code)code=mm[2]; if(!unit)unit=canonUnit(mm[3]); if(!qty)qty=parseInt(mm[4],10); if(desc===rest)desc=mm[1]; }
+  let inTable=false;
+  let pendingDesc='';  // 직전 줄의 품명
+
+  for(let i=0;i<lines.length;i++){
+    const s=normSp(lines[i]);
+    if(!s) continue;
+    const compact=s.replace(/\s+/g,'');
+    if(compact.includes('번호')&&compact.includes('계정')&&compact.includes('규격')){ inTable=true; pendingDesc=''; continue; }
+    if(compact.includes('물품명')&&compact.includes('EDI')){ inTable=true; continue; }
+    if(!inTable) continue;
+    if(compact.includes('***검수***')||s.includes('합계금액')){ inTable=false; continue; }
+
+    // 품목 행: "번호 [계정] 규격 단위 수량"
+    //   예: "15 비보험 EPH04 EA 6"  또는  "17 BAROZEN BOX 35"
+    const m = s.match(/^(\d{1,2})\s+(.+?)\s+(EA|BOX|SET|PK|PAC|DZ|DZN|BX|PACK)\s+(\d+)\s*$/i);
+    if(m){
+      const rowNo=parseInt(m[1],10);
+      let mid=m[2].trim();      // [계정] 규격  또는  규격
+      const unit=canonUnit(m[3]);
+      const qty=parseInt(m[4],10);
+
+      // 계정(비보험/보험코드)과 규격코드 분리
+      let ins='', code='';
+      const toks=mid.split(/\s+/);
+      if(toks[0]==='비보험'){ ins=''; toks.shift(); }
+      else if(/^[BM]\d{6,}$/.test(toks[0])){ ins=toks.shift(); }
+      // 남은 토큰이 규격코드
+      code = toks.join(' ').trim();
+
+      items.push({
+        'Material Desc':pendingDesc||'', 'Material Code':code,
+        'Unit':unit,'Qty':qty,'EDI Code':'','Insurance Code':ins
+      });
+      pendingDesc='';
+      continue;
     }
-    if(desc||code||qty) items.push({'Material Desc':normSp(desc),'Material Code':code,'Unit':unit,'Qty':qty,'EDI Code':edi,'Insurance Code':ins});
+
+    // 빈 행번호만 있는 줄 (18,19,20 등 빈 품목) 무시
+    if(/^\d{1,2}$/.test(s)) { continue; }
+    // EDI코드 (2자리+영숫자) → 직전 품목에 부여
+    if(/^\d{2}[A-Z0-9]{4,}$/.test(s)){
+      if(items.length) items[items.length-1]['EDI Code']=s;
+      continue;
+    }
+    // 그 외는 품명 후보 → pending에 저장
+    pendingDesc=s;
   }
   return items;
 }
