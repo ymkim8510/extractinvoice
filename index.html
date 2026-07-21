@@ -738,7 +738,11 @@ async function runExtract(){
   for(const {f,pages} of loaded){
     let allLines=[];pages.forEach(p=>allLines.push(...p));
     const fileFmt=detectFormat(allLines);
-    say(`\n📄 ${f.name} — 양식: ${FMT_LABEL[fileFmt]||fileFmt}`,'hd');
+    const textLineCnt=allLines.filter(l=>l).length;
+    say(`\n📄 ${f.name}`,'hd');
+    say(`   양식 감지: ${FMT_LABEL[fileFmt]||fileFmt}  ·  텍스트 ${textLineCnt}줄`, fileFmt==='UNKNOWN'?'warn':'blue');
+    if(fileFmt==='UNKNOWN') say(`   ⚠️ 양식을 인식하지 못했습니다 (스캔본이거나 새 양식)`, 'warn');
+    let fileItemCount=0;
 
     for(let pi=0;pi<pages.length;pi++){
       const lines=pages[pi];
@@ -747,7 +751,7 @@ async function runExtract(){
       rawLines.push(...lines);
       if(!lines.filter(l=>l).length){done++;continue;}
 
-      const fmt=(detectFormat(lines)==='UNKNOWN')?fileFmt:detectFormat(lines);
+      const fmt=fileFmt;  // 파일 전체를 하나의 양식으로 고정 (한 PDF=한 대리점)
       const h=extractHeader(lines,f.name,fmt);
       const totals=extractTotals(lines);
       const items=parseItems(lines,fmt);
@@ -768,8 +772,11 @@ async function runExtract(){
         docStats.push({file:f.name,page:pi+1,fmt,docNo:h['Document No']||`(p${pi+1})`,itemCount:valid.length,totalAmount:totals.totalAmount});
       }
       rows.push(...valid);
+      fileItemCount+=valid.length;
       done++;
     }
+    say(`   → 이 파일에서 ${fileItemCount}개 품목 추출`, fileItemCount>0?'ok':'warn');
+    if(fileItemCount===0 && textLineCnt>0) say(`   ⚠️ 텍스트는 있으나 품목 0개 — 양식 파서 확인 필요`,'warn');
   }
 
   prog(100,'완료');
