@@ -286,11 +286,18 @@ function extractHeader(lines, filename, fmt){
         }
       }
     }
-    // 문서번호: "No : 61332" 또는 "141641 - 2" 또는 세금계산서번호
+    // 문서번호: "No : 61332" / "141641 - 2" / "세금계산서번호 2"
     if(!docNo){
       let m = line.match(/No\s*[:：]\s*(\d+)/i);
-      if(m) docNo=m[1];
-      else { m = line.match(/^(\d{5,6})\s*[-–]\s*(\d)\b/); if(m) docNo=`${m[1]}-${m[2]}`; }
+      if(m){ docNo=m[1]; }
+      else {
+        m = line.match(/세금계산서번호\s+(\d+)/);
+        if(m){ docNo=m[1]; }
+        else {
+          m = line.match(/^(\d{5,6})\s*[-–]\s*(\d)\b/);
+          if(m) docNo=`${m[1]}-${m[2]}`;
+        }
+      }
     }
   }
 
@@ -744,6 +751,11 @@ async function runExtract(){
     if(fileFmt==='UNKNOWN') say(`   ⚠️ 양식을 인식하지 못했습니다 (스캔본이거나 새 양식)`, 'warn');
     let fileItemCount=0;
 
+    // 헤더는 파일 전체에서 한 번만 추출 → 모든 페이지 품목에 공통 적용
+    // (AMC처럼 헤더가 1페이지에만 있고 2~10페이지엔 품목만 반복되는 양식 대응)
+    const fileHeader=extractHeader(allLines,f.name,fileFmt);
+    say(`   납품처: ${fileHeader['End User Name']||'—'} · 문서 ${fileHeader['Document No']||'—'} · 날짜 ${fileHeader['Date']||'—'}`);
+
     for(let pi=0;pi<pages.length;pi++){
       const lines=pages[pi];
       prog(Math.round(done/totalPages*95),`${f.name} — ${pi+1}/${pages.length}`);
@@ -752,7 +764,7 @@ async function runExtract(){
       if(!lines.filter(l=>l).length){done++;continue;}
 
       const fmt=fileFmt;  // 파일 전체를 하나의 양식으로 고정 (한 PDF=한 대리점)
-      const h=extractHeader(lines,f.name,fmt);
+      const h=fileHeader;  // 파일 공통 헤더 사용
       const totals=extractTotals(lines);
       const items=parseItems(lines,fmt);
 
